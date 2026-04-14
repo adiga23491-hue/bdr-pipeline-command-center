@@ -15,7 +15,17 @@
       "Bash(gh --version)",
       "Bash(cp /tmp/gh_extracted/gh_2.67.0_macOS_arm64/bin/gh ~/.bun/bin/gh)",
       "Bash(/Users/eyalyadin/.bun/bin/gh --version)",
-      "Bash(jobs -l)"
+      "Bash(jobs -l)",
+      "Bash(gh repo:*)",
+      "Bash(curl -fsSL https://railway.app/install.sh)",
+      "Bash(sh)",
+      "Bash(tar -xzf /tmp/railway.tar.gz -C /tmp/)",
+      "Read(//private/tmp/**)",
+      "Bash(cp /tmp/railway ~/.bun/bin/railway)",
+      "Bash(railway --version)",
+      "Bash(railway login:*)",
+      "Read(//tmp/**)",
+      "Read(//Users/eyalyadin/.railway/**)"
     ]
   }
 }

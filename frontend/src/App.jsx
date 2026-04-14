@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import KanbanBoard from './components/KanbanBoard.jsx';
 import ManagerDashboard from './components/ManagerDashboard.jsx';
+import LoginPage from './components/LoginPage.jsx';
 
 const STAGE_PILLS = [
   { label: 'Not Accepted', key: 'Meeting Not Accepted', style: 'bg-[#ffe9e9] text-[#c9372c] border border-[#f5c2c0]' },
@@ -10,29 +11,49 @@ const STAGE_PILLS = [
 ];
 
 export default function App() {
-  const [opps, setOpps] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser]               = useState(undefined); // undefined = loading
+  const [opps, setOpps]               = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [showDashboard, setShowDashboard] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast]             = useState(null);
 
   const notify = useCallback((msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 2800);
   }, []);
 
+  // ── 1. Check auth on mount ─────────────────────────────────────────────────
   useEffect(() => {
+    fetch('/api/me')
+      .then((r) => r.json())
+      .then(({ user: u }) => setUser(u ?? null))
+      .catch(() => setUser(null));
+  }, []);
+
+  // ── 2. Load opportunities once authenticated ───────────────────────────────
+  useEffect(() => {
+    if (!user) return;
     fetch('/api/opportunities')
       .then((r) => r.json())
-      .then((data) => { setOpps(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => { notify('Could not reach backend — is the server running?', 'error'); setLoading(false); });
-  }, [notify]);
+      .then((data) => { setOpps(Array.isArray(data) ? data : []); setDataLoading(false); })
+      .catch(() => { notify('Could not reach backend', 'error'); setDataLoading(false); });
+  }, [user, notify]);
 
+  // ── 3. Logout ──────────────────────────────────────────────────────────────
+  const logout = useCallback(async () => {
+    await fetch('/auth/logout', { method: 'POST' });
+    setUser(null);
+    setOpps([]);
+    setShowDashboard(false);
+  }, []);
+
+  // ── 4. CRUD ────────────────────────────────────────────────────────────────
   const addOpp = useCallback(async (stage) => {
     const tempId = `temp-${Date.now()}`;
     const draft = { Id: tempId, Opp_Name: 'New Opportunity', Stage: stage, Meeting_Date: '', Languages: '', Pain_Validated: 'false', Source: '', Link: '', Last_Updated: new Date().toISOString() };
     setOpps((prev) => [draft, ...prev]);
     try {
-      const res = await fetch('/api/opportunities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
+      const res  = await fetch('/api/opportunities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
       const saved = await res.json();
       setOpps((prev) => prev.map((o) => (o.Id === tempId ? saved : o)));
     } catch {
@@ -50,14 +71,35 @@ export default function App() {
 
   const deleteOpp = useCallback(async (id) => {
     setOpps((prev) => prev.filter((o) => o.Id !== id));
-    try { await fetch(`/api/opportunities/${id}`, { method: 'DELETE' }); notify('Opportunity removed'); }
+    try { await fetch(`/api/opportunities/${id}`, { method: 'DELETE' }); }
     catch { notify('Delete failed', 'error'); }
   }, [notify]);
 
+  // ── Render: loading splash ─────────────────────────────────────────────────
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-[#f5f6f8] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render: login page ─────────────────────────────────────────────────────
+  if (!user) {
+    const params = new URLSearchParams(window.location.search);
+    return <LoginPage error={params.has('login_error')} />;
+  }
+
+  const isManager = user.role === 'manager';
+
+  // ── Render: app ────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f5f6f8] text-gray-800 font-sans">
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto max-w-screen-2xl px-6 py-3 flex items-center gap-4">
 
@@ -74,7 +116,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Stage summary pills */}
+          {/* Stage pills */}
           <div className="hidden md:flex items-center gap-1.5">
             {STAGE_PILLS.map((s) => (
               <span key={s.key} className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${s.style}`}>
@@ -93,43 +135,76 @@ export default function App() {
               </svg>
               Export CSV
             </a>
-            <button
-              onClick={() => setShowDashboard((s) => !s)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
-                showDashboard
-                  ? 'bg-[#0073ea] border-[#0073ea] text-white shadow-sm'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-[#0073ea] hover:text-[#0073ea]'
-              }`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              {showDashboard ? 'Board View' : 'Manager Dashboard'}
-            </button>
+
+            {/* Dashboard toggle — managers only */}
+            {isManager && (
+              <button
+                onClick={() => setShowDashboard((s) => !s)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
+                  showDashboard
+                    ? 'bg-[#0073ea] border-[#0073ea] text-white shadow-sm'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-[#0073ea] hover:text-[#0073ea]'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {showDashboard ? 'Board View' : 'Dashboard'}
+              </button>
+            )}
+
+            {/* User avatar + name + logout */}
+            <div className="flex items-center gap-2 pl-2 border-l border-gray-200 ml-1">
+              {user.avatar
+                ? <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full border border-gray-200" referrerPolicy="no-referrer" />
+                : (
+                  <div className="w-7 h-7 rounded-full bg-[#0073ea] flex items-center justify-center text-white text-xs font-bold">
+                    {user.name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )
+              }
+              <span className="text-xs font-medium text-gray-600 hidden sm:block max-w-[8rem] truncate">
+                {user.name}
+              </span>
+              {isManager && (
+                <span className="text-xs px-1.5 py-0.5 bg-[#f3eeff] text-[#6645c6] border border-[#d5c4f5] rounded-full font-semibold">
+                  Manager
+                </span>
+              )}
+              <button
+                onClick={logout}
+                title="Sign out"
+                className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* ── Main ───────────────────────────────────────────────────────── */}
+      {/* ── Main ────────────────────────────────────────────────────────── */}
       <main className="mx-auto max-w-screen-2xl px-6 py-6">
-        {loading ? (
+        {dataLoading ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3">
             <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-400 text-sm">Loading pipeline…</p>
+            <p className="text-sm text-gray-400">Loading pipeline…</p>
           </div>
-        ) : showDashboard ? (
+        ) : (isManager && showDashboard) ? (
           <ManagerDashboard opps={opps} />
         ) : (
           <KanbanBoard opps={opps} onAdd={addOpp} onUpdate={updateOpp} onDelete={deleteOpp} />
         )}
       </main>
 
-      {/* ── Toast ──────────────────────────────────────────────────────── */}
+      {/* ── Toast ───────────────────────────────────────────────────────── */}
       {toast && (
         <div className={`fixed bottom-6 right-6 z-[100] px-4 py-3 rounded-xl shadow-lg text-sm font-medium border ${
           toast.type === 'error'
-            ? 'bg-white border-red-200 text-red-600 shadow-red-100'
-            : 'bg-white border-emerald-200 text-emerald-700 shadow-emerald-100'
+            ? 'bg-white border-red-200 text-red-600'
+            : 'bg-white border-emerald-200 text-emerald-700'
         }`}>
           {toast.msg}
         </div>
