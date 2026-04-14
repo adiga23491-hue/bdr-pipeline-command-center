@@ -1,7 +1,5 @@
 const express  = require('express');
 const cors     = require('cors');
-const session  = require('express-session');
-const passport = require('./auth');
 const { v4: uuidv4 } = require('uuid');
 const fs   = require('fs');
 const path = require('path');
@@ -15,61 +13,10 @@ const CSV_PATH = process.env.CSV_PATH || path.join(__dirname, 'pipeline_master.c
 
 const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','Last_Updated'];
 
-// ── Trust proxy (Railway / any reverse-proxy) ────────────────────────────────
 app.set('trust proxy', 1);
 
-// ── Core middleware ──────────────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-
-// ── Sessions ─────────────────────────────────────────────────────────────────
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'bdr-pipeline-dev-secret-change-me',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: IS_PROD,          // HTTPS only in production
-    sameSite: IS_PROD ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  },
-}));
-
-// ── Passport ─────────────────────────────────────────────────────────────────
-app.use(passport.initialize());
-app.use(passport.session());
-
-// ── Auth routes ──────────────────────────────────────────────────────────────
-
-// Kick off Google OAuth
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-// Google OAuth callback
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/?login_error=true' }),
-  (_req, res) => res.redirect('/')
-);
-
-// Logout
-app.post('/auth/logout', (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    req.session.destroy(() => res.json({ success: true }));
-  });
-});
-
-// Current user (no auth required — returns null when not logged in)
-app.get('/api/me', (req, res) => {
-  res.json({ user: req.isAuthenticated() ? req.user : null });
-});
-
-// ── Auth guard ───────────────────────────────────────────────────────────────
-const requireAuth = (req, res, next) => {
-  if (req.isAuthenticated()) return next();
-  res.status(401).json({ error: 'Unauthorized' });
-};
 
 // ── CSV helpers ──────────────────────────────────────────────────────────────
 function ensureCSV() {
@@ -87,13 +34,13 @@ function writeCSV(records) {
   fs.writeFileSync(CSV_PATH, stringify(records, { header: true, columns: HEADERS }), 'utf8');
 }
 
-// ── Protected API routes ─────────────────────────────────────────────────────
+// ── API routes ───────────────────────────────────────────────────────────────
 
-app.get('/api/opportunities', requireAuth, (_req, res) => {
+app.get('/api/opportunities', (_req, res) => {
   res.json(readCSV());
 });
 
-app.post('/api/opportunities', requireAuth, (req, res) => {
+app.post('/api/opportunities', (req, res) => {
   const records = readCSV();
   const opp = {
     Id: uuidv4(),
@@ -111,7 +58,7 @@ app.post('/api/opportunities', requireAuth, (req, res) => {
   res.status(201).json(opp);
 });
 
-app.put('/api/opportunities/:id', requireAuth, (req, res) => {
+app.put('/api/opportunities/:id', (req, res) => {
   const records = readCSV();
   const idx = records.findIndex((r) => r.Id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
@@ -120,12 +67,12 @@ app.put('/api/opportunities/:id', requireAuth, (req, res) => {
   res.json(records[idx]);
 });
 
-app.delete('/api/opportunities/:id', requireAuth, (req, res) => {
+app.delete('/api/opportunities/:id', (req, res) => {
   writeCSV(readCSV().filter((r) => r.Id !== req.params.id));
   res.json({ success: true });
 });
 
-app.get('/api/export', requireAuth, (_req, res) => {
+app.get('/api/export', (_req, res) => {
   ensureCSV();
   res.download(CSV_PATH, 'pipeline_master.csv');
 });
@@ -139,6 +86,5 @@ if (IS_PROD) {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n  BDR Pipeline Backend  →  http://localhost:${PORT}`);
-  console.log(`  Manager email         →  ${process.env.MANAGER_EMAIL || '(not set)'}\n`);
+  console.log(`\n  BDR Pipeline Backend  →  http://localhost:${PORT}\n`);
 });
