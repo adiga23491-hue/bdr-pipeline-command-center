@@ -1,0 +1,13 @@
+{
+  "name": "bdr-pipeline-command-center",
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently -n backend,frontend -c cyan,magenta \"cd backend && bun run server.js\" \"cd frontend && bun run dev\"",
+    "build": "cd frontend && npm run build",
+    "start": "node backend/server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "BDR Backend (Express + CSV)",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "backend/server.js"],
+      "port": 3001
+    },
+    {
+      "name": "BDR Frontend (Vite + React)",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd frontend && bun run dev"],
+      "port": 5173
+    }
+  ]
+}

@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeaLights BDR Playbook</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1f2b;
+    --border: #232838;
+    --accent: #e85d2f;
+    --accent2: #f0a500;
+    --accent3: #3b9eff;
+    --text: #e8eaf0;
+    --text-dim: #8892a4;
+    --text-muted: #4a5568;
+    --success: #22c55e;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: white;
+    font-weight: 400;
+  }
+  .logo-text { font-size: 15px; font-weight: 700; letter-spacing: 0.05em; }
+  .logo-sub { font-size: 11px; color: var(--text-dim); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
+  .api-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .api-badge:hover { border-color: var(--accent); color: var(--text); }
+  .api-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+  .api-dot.connected { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+  /* NAV TABS */
+  .nav {
+    display: flex;
+    gap: 2px;
+    padding: 16px 32px 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 7px;
+    background: transparent;
+  }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active {
+    color: var(--text);
+    background: var(--bg);
+    border-color: var(--border);
+    border-bottom-color: var(--bg);
+  }
+  .nav-tab .tab-icon { font-size: 15px; }
+
+  /* MAIN */
+  .main { padding: 32px; max-width: 1100px; margin: 0 auto; }
+  .tab-content { display: none; animation: fadeIn 0.3s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  /* SETUP PANEL */
+  .setup-panel {
+    background: linear-gradient(135deg, #1a1f2b 0%, #12151c 100%);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+  .setup-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .setup-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
+  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .form-input, .form-textarea, .form-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-select option { background: var(--surface); }
+  .btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #d44e22; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* AI RESPONSE */
+  .ai-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 16px;
+    display: none;
+  }
+  .ai-box.visible { display: block; }
+  .ai-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; color: var(--accent2);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ai-content {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .ai-content strong { color: var(--accent2); font-weight: 500; }
+  .loading {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-dim); font-size: 13px;
+  }
+  .loading-dots span {
+    animation: blink 1.4s infinite;
+    display: inline-block;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100% { opacity: 0; } 40% { opacity: 1; } }
+
+  /* SCRIPT CARDS */
+  .script-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .script-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .script-card:hover, .script-card.selected {
+    border-color: var(--accent);
+    background: rgba(232, 93, 47, 0.07);
+  }
+  .script-card-icon { font-size: 22px; margin-bottom: 8px; }
+  .script-card-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .script-card-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* OBJECTION LIST */
+  .objection-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .obj-pill {
+    padding: 10px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .obj-pill:hover, .obj-pill.selected { border-color: var(--accent3); color: var(--accent3); }
+  .obj-pill-icon { font-size: 15px; }
+
+  /* DASHBOARD */
+  .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .dash-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .dash-stat-val { font-family: 'DM Serif Display', serif; font-size: 36px; color: var(--accent); margin-bottom: 4px; }
+  .dash-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .quick-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .quick-link {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .quick-link:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .quick-link-icon { font-size: 24px; }
+  .quick-link-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .quick-link-desc { font-size: 11px; color: var(--text-dim); }
+
+  /* DISPO TABLE */
+  .dispo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .dispo-table th {
+    background: var(--surface2);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .dispo-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .dispo-table tr:hover td { background: var(--surface2); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .badge-red { background: rgba(232,93,47,0.15); color: var(--accent); }
+  .badge-yellow { background: rgba(240,165,0,0.15); color: var(--accent2); }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--success); }
+  .badge-blue { background: rgba(59,158,255,0.15); color: var(--accent3); }
+
+  /* NEXT STEPS */
+  .outcome-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .outcome-btn {
+    padding: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Syne', sans-serif;
+  }
+  .outcome-btn:hover, .outcome-btn.selected { border-color: var(--accent2); }
+  .outcome-btn-icon { font-size: 26px; margin-bottom: 8px; }
+  .outcome-btn-label { font-size: 12px; font-weight: 700; }
+
+  /* QUALIFY CHECKLIST */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .check-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* PAGE TITLE */
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 6px; }
+  .page-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; }
+
+  /* INLINE ROW */
+  .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .row .form-group { flex: 1; min-width: 180px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .modal-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  .warning { background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.3); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--accent2); margin-top: 14px; }
+
+  @media (max-width: 600px) {
+    .header { padding: 14px 16px; }
+    .nav { padding: 12px 16px 0; }
+    .main { padding: 20px 16px; }
+    .dash-grid { grid-template-columns: repeat(2, 1fr); }
+    .quick-links { grid-template-columns: 1fr; }
+    .setup-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">SL</div>
+    <div>
+      <div class="logo-text">SeaLights BDR</div>
+      <div class="logo-sub">Playbook Coach</div>
+    </div>
+  </div>
+  <div class="api-badge" onclick="openSettings()">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiStatus">Setup API Key</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="nav-tab active" onclick="showTab('dashboard')"><span class="tab-icon">🏠</span>Dashboard</div>
+  <div class="nav-tab" onclick="showTab('scripts')"><span class="tab-icon">📞</span>Call Scripts</div>
+  <div class="nav-tab" onclick="showTab('objections')"><span class="tab-icon">🛡️</span>Objection Handler</div>
+  <div class="nav-tab" onclick="showTab('email')"><span class="tab-icon">✉️</span>Email Drafter</div>
+  <div class="nav-tab" onclick="showTab('nextsteps')"><span class="tab-icon">📋</span>Next Steps</div>
+  <div class="nav-tab" onclick="showTab('qualify')"><span class="tab-icon">✅</span>Qualification</div>
+  <div class="nav-tab" onclick="showTab('dispos')"><span class="tab-icon">🗂️</span>Dispos</div>
+</nav>
+
+<!-- ======================== DASHBOARD ======================== -->
+<div class="main">
+<div id="tab-dashboard" class="tab-content active">
+  <div class="page-title">Good to see you 👋</div>
+  <div class="page-sub">Your SeaLights BDR Playbook — all scripts, objections & tools in one place.</div>
+
+  <div class="dash-grid">
+    <div class="dash-stat"><div class="dash-stat-val">12</div><div class="dash-stat-label">Objection Responses</div></div>
+    <div class="dash-stat"><div class="dash-stat-val">8</div><div class="dash-stat-label">Call Scripts</div></div>
+    <div class="dash-stat"><div class="dash-stat-val">5</div><div class="dash-stat-label">Email Templates</div></div>
+  </div>
+
+  <div class="section-label">Quick Access</div>
+  <div class="quick-links">
+    <div class="quick-link" onclick="showTab('scripts')">
+      <div class="quick-link-icon">📞</div>
+      <div>
+        <div class="quick-link-title">Call Scripts</div>
+        <div class="quick-link-desc">Barbara script, inbound scripts, AI feature pitch</div>
+      </div>
+    </div>
+    <div class="quick-link" onclick="showTab('objections')">
+      <div class="quick-link-icon">🛡️</div>
+      <div>
+        <div class="quick-link-title">Handle an Objection</div>
+        <div class="quick-link-desc">Budget, inhouse tool, wrong person & more</div>
+      </div>
+    </div>
+    <div class="quick-link" onclick="showTab('email')">
+      <div class="quick-link-icon">✉️</div>
+      <div>
+        <div class="quick-link-title">Draft an Email</div>
+        <div class="quick-link-desc">Personalized from call notes + LinkedIn</div>
+      </div>
+    </div>
+    <div class="quick-link" onclick="showTab('nextsteps')">
+      <div class="quick-link-icon">📋</div>
+      <div>
+        <div class="quick-link-title">After-Call Next Steps</div>
+        <div class="quick-link-desc">What to do after any call outcome</div>
+      </div>
+    </div>
+    <div class="quick-link" onclick="showTab('qualify')">
+      <div class="quick-link-icon">✅</div>
+      <div>
+        <div class="quick-link-title">Qualify a Lead</div>
+        <div class="quick-link-desc">ICP checklist + qualification questions</div>
+      </div>
+    </div>
+    <div class="quick-link" onclick="openSettings()">
+      <div class="quick-link-icon">⚙️</div>
+      <div>
+        <div class="quick-link-title">Setup API Key</div>
+        <div class="quick-link-desc">Connect Gemini to power AI responses</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:28px">
+  <div class="section-label">Supported Tech Stack</div>
+  <div class="card">
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;color:var(--success);font-weight:700;text-transform:uppercase;margin-bottom:8px">✅ We Support</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-dim);line-height:2">Java · JavaScript · Angular · React · TypeScript · NodeJS · Scala · Python · C# · .NET · Go · C++ (GCC) · C (GCC)</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:8px">❌ Not Supported</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-dim);line-height:2">Mobile (iOS/Android) · Salesforce · Ruby · Oracle · PHP · HTML · Linux</div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ======================== CALL SCRIPTS ======================== -->
+<div id="tab-scripts" class="tab-content">
+  <div class="page-title">Call Scripts</div>
+  <div class="page-sub">Select a script type to get the full script or ask the AI to adapt it.</div>
+
+  <div class="section-label">Choose a Script</div>
+  <div class="script-grid">
+    <div class="script-card" onclick="selectScript(this,'cold_call')">
+      <div class="script-card-icon">🧊</div>
+      <div class="script-card-title">Cold Call — Barbara Script</div>
+      <div class="script-card-desc">Standard outbound cold call with pitch and CTA options</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'short_advanced')">
+      <div class="script-card-icon">⚡</div>
+      <div class="script-card-title">Short & Focused (Advanced)</div>
+      <div class="script-card-desc">Concise pitch focused on AI capabilities and quality gates</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'wp_script')">
+      <div class="script-card-icon">📄</div>
+      <div class="script-card-title">White Paper Download Script</div>
+      <div class="script-card-desc">For prospects who downloaded a WP or watched a demo video</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'ai_feature')">
+      <div class="script-card-icon">🤖</div>
+      <div class="script-card-title">AI Feature Script</div>
+      <div class="script-card-desc">Highlighting AI test generation and code-to-test mapping</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'zoom_qual')">
+      <div class="script-card-icon">🎥</div>
+      <div class="script-card-title">Zoom Qualification Script</div>
+      <div class="script-card-desc">Full script for scheduled qualification calls over Zoom</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'demo_handoff')">
+      <div class="script-card-icon">🤝</div>
+      <div class="script-card-title">Demo Handoff to AE</div>
+      <div class="script-card-desc">Opening the demo session and handing off to AE</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'dev_magic')">
+      <div class="script-card-icon">💻</div>
+      <div class="script-card-title">Magic Paragraph — Dev/Eng</div>
+      <div class="script-card-desc">Tailored pitch for engineering/dev personas</div>
+    </div>
+    <div class="script-card" onclick="selectScript(this,'qa_magic')">
+      <div class="script-card-icon">🔍</div>
+      <div class="script-card-title">Magic Paragraph — QA/QE</div>
+      <div class="script-card-desc">Tailored pitch for QA/QE personas</div>
+    </div>
+  </div>
+
+  <div id="scriptCustomInput" style="display:none;">
+    <div class="section-label">Customize (Optional)</div>
+    <div class="row">
+      <div class="form-group">
+        <label class="form-label">Prospect Name</label>
+        <input class="form-input" id="scriptProspect" placeholder="e.g. John Smith">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company</label>
+        <input class="form-input" id="scriptCompany" placeholder="e.g. Acme Corp">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Persona</label>
+        <select class="form-select" id="scriptPersona">
+          <option value="">Select...</option>
+          <option>VP of Engineering</option>
+          <option>Director of QA</option>
+          <option>QE Manager</option>
+          <option>CTO</option>
+          <option>Engineering Manager</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="getScript()">🎯 Get Script</button>
+  </div>
+
+  <div class="ai-box" id="scriptResult">
+    <div class="ai-header">📋 Playbook Script</div>
+    <div class="ai-content" id="scriptContent"></div>
+  </div>
+</div>
+
+<!-- ======================== OBJECTION HANDLER ======================== -->
+<div id="tab-objections" class="tab-content">
+  <div class="page-title">Objection Handler</div>
+  <div class="page-sub">Select an objection or type your own — get the exact playbook response.</div>
+
+  <div class="section-label">Common Objections</div>
+  <div class="objection-list">
+    <div class="obj-pill" onclick="selectObjPill(this,'send_email')"><span class="obj-pill-icon">📧</span>Send me an email</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'inhouse_solution')"><span class="obj-pill-icon">🏠</span>We have an inhouse solution</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'already_tool')"><span class="obj-pill-icon">🔧</span>We already have a tool</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'no_budget')"><span class="obj-pill-icon">💸</span>We don't have budget</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'not_dm')"><span class="obj-pill-icon">👤</span>I'm not a DM</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'not_relevant')"><span class="obj-pill-icon">🚫</span>Not relevant / not our focus</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'how_does_it_work')"><span class="obj-pill-icon">❓</span>How does it work?</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'not_qa')"><span class="obj-pill-icon">🤷</span>I don't handle QA</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'tricentis_existing')"><span class="obj-pill-icon">🔗</span>We already use Tricentis</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'clevel_exec')"><span class="obj-pill-icon">👔</span>High-Level Exec / C-Level</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'not_right_person')"><span class="obj-pill-icon">↩️</span>I'm not the right person</div>
+    <div class="obj-pill" onclick="selectObjPill(this,'sonarqube')"><span class="obj-pill-icon">⚙️</span>We use SonarQube / already have coverage</div>
+  </div>
+
+  <div class="section-label">Or Type Your Own</div>
+  <div class="form-group" style="margin-bottom:14px">
+    <textarea class="form-textarea" id="customObjection" placeholder="Type the exact objection the prospect said..." rows="2"></textarea>
+  </div>
+  <button class="btn btn-primary" onclick="handleObjection()">🛡️ Get Playbook Response</button>
+
+  <div class="ai-box" id="objectionResult">
+    <div class="ai-header">🛡️ Playbook Response</div>
+    <div class="ai-content" id="objectionContent"></div>
+  </div>
+</div>
+
+<!-- ======================== EMAIL DRAFTER ======================== -->
+<div id="tab-email" class="tab-content">
+  <div class="page-title">Email Drafter</div>
+  <div class="page-sub">Fill in what you know — AI drafts a personalized email using your playbook templates.</div>
+
+  <div class="card">
+    <div class="card-title">Prospect Details</div>
+    <div class="row" style="margin-bottom:14px">
+      <div class="form-group">
+        <label class="form-label">Prospect First Name</label>
+        <input class="form-input" id="emailName" placeholder="e.g. Sarah">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company</label>
+        <input class="form-input" id="emailCompany" placeholder="e.g. JPMorgan Chase">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title / Persona</label>
+        <input class="form-input" id="emailTitle" placeholder="e.g. VP of Engineering">
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:14px">
+      <div class="form-group">
+        <label class="form-label">Email Type</label>
+        <select class="form-select" id="emailType">
+          <option value="cold_call_followup">Cold Call Follow-Up (asked for info)</option>
+          <option value="no_response">No Response Follow-Up</option>
+          <option value="invite">Demo Invite / Suggested Slot</option>
+          <option value="meeting_declined">Meeting Declined — Reschedule</option>
+          <option value="meeting_accepted">Meeting Accepted — Confirmation</option>
+          <option value="assistant_fwd">Via Assistant — Forward to Lead</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Call Notes (what did you discuss?)</label>
+      <textarea class="form-textarea" id="emailCallNotes" placeholder="e.g. Spoke briefly, mentioned they run all tests all the time, long E2E cycles, interested in seeing how SL works, asked for more info..." rows="3"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">LinkedIn Bio / About Section (paste if available)</label>
+      <textarea class="form-textarea" id="emailLinkedin" placeholder="Paste their LinkedIn headline or About section here for a more personalized email..." rows="3"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label class="form-label">Primary Pain Point Identified</label>
+      <select class="form-select" id="emailPain">
+        <option value="">Not sure</option>
+        <option>Long E2E / regression test cycles</option>
+        <option>Escaping defects / production bugs</option>
+        <option>Running all tests all the time</option>
+        <option>No visibility into untested code</option>
+        <option>High cost of testing</option>
+        <option>Manual testing bottleneck</option>
+        <option>AI / ML in testing interest</option>
+        <option>Executive visibility / quality metrics</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="draftEmail()">✉️ Draft Email</button>
+  </div>
+
+  <div class="ai-box" id="emailResult">
+    <div class="ai-header">✉️ Draft Email</div>
+    <div class="ai-content" id="emailContent"></div>
+    <div style="margin-top:14px;display:flex;gap:10px" id="emailActions" style="display:none">
+      <button class="btn btn-secondary" onclick="copyEmail()">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== NEXT STEPS ======================== -->
+<div id="tab-nextsteps" class="tab-content">
+  <div class="page-title">After-Call Next Steps</div>
+  <div class="page-sub">What happened on the call? Get your exact next action from the playbook.</div>
+
+  <div class="section-label">What Was the Call Outcome?</div>
+  <div class="outcome-grid">
+    <div class="outcome-btn" onclick="selectOutcome(this,'connected_interested')">
+      <div class="outcome-btn-icon">🟢</div>
+      <div class="outcome-btn-label">Connected — Interested</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'demo_scheduled')">
+      <div class="outcome-btn-icon">📅</div>
+      <div class="outcome-btn-label">Demo Scheduled</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'followup_hangup')">
+      <div class="outcome-btn-icon">📞</div>
+      <div class="outcome-btn-label">Follow-up (Hang-up)</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'not_interested')">
+      <div class="outcome-btn-icon">🔴</div>
+      <div class="outcome-btn-label">Not Interested</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'no_answer')">
+      <div class="outcome-btn-icon">📵</div>
+      <div class="outcome-btn-label">No Answer</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'meeting_declined')">
+      <div class="outcome-btn-icon">❌</div>
+      <div class="outcome-btn-label">Meeting Declined</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'meeting_tentative')">
+      <div class="outcome-btn-icon">❓</div>
+      <div class="outcome-btn-label">Meeting Tentative</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'meeting_proposed_new_time')">
+      <div class="outcome-btn-icon">🔄</div>
+      <div class="outcome-btn-label">Proposed New Time</div>
+    </div>
+    <div class="outcome-btn" onclick="selectOutcome(this,'meeting_accepted')">
+      <div class="outcome-btn-icon">✅</div>
+      <div class="outcome-btn-label">Meeting Accepted</div>
+    </div>
+  </div>
+
+  <div id="nextStepsContext" style="display:none;">
+    <div class="section-label">Add Context (Optional)</div>
+    <div class="row">
+      <div class="form-group">
+        <label class="form-label">Prospect Name</label>
+        <input class="form-input" id="nsProspect" placeholder="First name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Any notes from the call?</label>
+        <input class="form-input" id="nsNotes" placeholder="e.g. asked to reschedule, has budget concerns...">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="getNextSteps()">📋 Get Next Steps</button>
+  </div>
+
+  <div class="ai-box" id="nextStepsResult">
+    <div class="ai-header">📋 Your Next Steps</div>
+    <div class="ai-content" id="nextStepsContent"></div>
+  </div>
+</div>
+
+<!-- ======================== QUALIFICATION ======================== -->
+<div id="tab-qualify" class="tab-content">
+  <div class="page-title">Lead Qualification</div>
+  <div class="page-sub">ICP checklist, qualification questions, and inbound rules.</div>
+
+  <div class="section-label">Inbound Lead Checklist</div>
+  <div class="card">
+    <ul class="checklist">
+      <li><span class="check-icon">🏢</span><div><strong>Tier 1 or Tier 2 account?</strong> — If not, don't book</div></li>
+      <li><span class="check-icon">💻</span><div><strong>Company develops software (not services)?</strong> — If they offer software development services, don't book</div></li>
+      <li><span class="check-icon">🌍</span><div><strong>HQ in right territory?</strong> — No LATAM, APAC, EMEA, Middle East, India, Iran</div></li>
+      <li><span class="check-icon">⚡</span><div><strong>No existing S3/S4/S5 opportunity?</strong> — Check Triforce first</div></li>
+      <li><span class="check-icon">👤</span><div><strong>ICP persona?</strong> — Director and above. No SAP/ABAP/S4HANA, no Low Level (managers, engineers), no consultants</div></li>
+      <li><span class="check-icon">🏭</span><div><strong>Valid industry?</strong> — Not: Business Services, Education, Churches, Non-Profit, Consultants, Government</div></li>
+      <li><span class="check-icon">📧</span><div><strong>Not a Tricentis employee?</strong> — No @tricentis.com email</div></li>
+      <li><span class="check-icon">📊</span><div><strong>SeaLights ARR is 0 or blank?</strong> — If they're already a customer, check with Adi</div></li>
+    </ul>
+  </div>
+
+  <div class="section-label">Qualification Questions to Ask on Call</div>
+  <div class="card">
+    <ul class="checklist">
+      <li><span class="check-icon">🔤</span><div><strong>Programming languages</strong> — "What are the primary programming languages used in your inhouse applications?"</div></li>
+      <li><span class="check-icon">🏗️</span><div><strong>Inhouse vs outsourced</strong> — "They are developed inhouse right? Nothing outsourced?"</div></li>
+      <li><span class="check-icon">⏱️</span><div><strong>Primary interest</strong> — "Would you be looking to reduce time? Improve quality? Reduce the cost of testing altogether?"</div></li>
+      <li><span class="check-icon">⏳</span><div><strong>Test cycle time</strong> — "How long does it usually take to run a full suite of E2E or regression tests?"</div></li>
+      <li><span class="check-icon">🔁</span><div><strong>Run all tests?</strong> — "Do you run ALL of your tests ALL the time?"</div></li>
+      <li><span class="check-icon">🛡️</span><div><strong>Escaping defects</strong> — "Do you have issues with escaping defects or untested code reaching production?"</div></li>
+      <li><span class="check-icon">🏢</span><div><strong>Team structure</strong> — "Do you have a separate QA team or do engineers handle QA?"</div></li>
+    </ul>
+  </div>
+
+  <div class="section-label">AI Qualification Helper</div>
+  <div class="card">
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">Describe the lead (title, company, what they said...)</label>
+      <textarea class="form-textarea" id="qualifyInput" placeholder="e.g. Director of QA at a fintech company in the US, 500 person company, mentioned they have long regression cycles and run everything manually. Uses Java and Python." rows="3"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="qualifyLead()">✅ Should I Book This Lead?</button>
+    <div class="ai-box" id="qualifyResult" style="margin-top:14px">
+      <div class="ai-header">✅ Qualification Analysis</div>
+      <div class="ai-content" id="qualifyContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== DISPOS ======================== -->
+<div id="tab-dispos" class="tab-content">
+  <div class="page-title">Cadence Dispositions</div>
+  <div class="page-sub">Use these dispo reasons in SalesLoft after every connected call.</div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="dispo-table">
+      <thead>
+        <tr>
+          <th>Dispo Reason</th>
+          <th>Description</th>
+          <th>Code</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Not Interested Now</td><td>Relevant person, not interested at the moment</td><td>SeaLights NIN</td><td><span class="badge badge-red">No Interest</span></td></tr>
+        <tr><td>Irrelevant Territory</td><td>Relevant person but in irrelevant territory (India, Iran, etc.)</td><td>SeaLights IT</td><td><span class="badge badge-yellow">Contact Bad Fit</span></td></tr>
+        <tr><td>Too Low Level</td><td>Relevant person but too low level (manager, engineer)</td><td>SeaLights TLL</td><td><span class="badge badge-yellow">Contact Bad Fit</span></td></tr>
+        <tr><td>Irrelevant Persona</td><td>Not related to software at all (food engineering, machinery...)</td><td>SeaLights IP</td><td><span class="badge badge-yellow">Contact Bad Fit</span></td></tr>
+        <tr><td>Company Too Small</td><td>Relevant person but company too small</td><td>SeaLights CTS</td><td><span class="badge badge-yellow">Contact Bad Fit</span></td></tr>
+        <tr><td>Too Immature</td><td>No CI/CD, not enough dev, new teams</td><td>SeaLights TI</td><td><span class="badge badge-red">No Interest</span></td></tr>
+        <tr><td>Tech Stack Not Supported</td><td>Not Java, .NET, C#, C++, etc.</td><td>SeaLights TSNS</td><td><span class="badge badge-yellow">Company Bad Fit</span></td></tr>
+        <tr><td>Irrelevant Company</td><td>Irrelevant industry / territory / blacklist</td><td>SeaLights IC</td><td><span class="badge badge-yellow">Company Bad Fit</span></td></tr>
+        <tr><td>Follow-up — Hang-up</td><td>Didn't hear the pitch, want to reconnect</td><td>SeaLights FUHU</td><td><span class="badge badge-blue">Followup</span></td></tr>
+        <tr><td>Follow-up — Interested</td><td>Heard the pitch and is interested</td><td>SeaLights FUI</td><td><span class="badge badge-blue">Followup</span></td></tr>
+        <tr><td>Demo Scheduled</td><td>Meeting is booked</td><td>SeaLights DS</td><td><span class="badge badge-green">🎉 Booked</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:24px">
+  <div class="section-label">Inbound Emojis (Slack Channel)</div>
+  <div class="card">
+    <ul class="checklist">
+      <li><span class="check-icon">👍</span><div><strong>Claim</strong> — Reply "ME" — who catches first</div></li>
+      <li><span class="check-icon">❌</span><div><strong>Unqualified</strong> — Mention why: Low Level / Irrelevant Prospect / Company Bad Fit</div></li>
+      <li><span class="check-icon">❤️</span><div><strong>Qualified</strong></div></li>
+      <li><span class="check-icon">✅</span><div><strong>Booked</strong></div></li>
+      <li><span class="check-icon">🚫</span><div><strong>No Phone</strong> — Pass back to Yulia for review</div></li>
+    </ul>
+  </div>
+  </div>
+</div>
+</div>
+
+<!-- ======================== SETTINGS MODAL ======================== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">⚙️ API Setup</div>
+    <div class="modal-desc">Connect your free Gemini API key to power all AI responses.</div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px;line-height:1.9;color:var(--text-dim)">
+      <strong style="color:var(--text)">How to get your free key (2 min):</strong><br>
+      1. Go to <strong style="color:var(--accent3)">aistudio.google.com</strong><br>
+      2. Sign in with your Google account<br>
+      3. Click <strong>"Get API Key"</strong> then <strong>"Create API key"</strong><br>
+      4. Copy and paste it below
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">Gemini API Key</label>
+      <input class="form-input" id="apiKeyInput" type="text" placeholder="AIza...">
+    </div>
+    <div id="testResult" style="font-size:12px;margin-bottom:10px;min-height:18px"></div>
+    <div class="warning">🔒 Your key is saved only in <strong>this browser</strong> — never sent anywhere except Google's API directly. Free tier = 1,500 requests/day.</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="testApiKey()">🧪 Test Key</button>
+      <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======= PLAYBOOK KNOWLEDGE BASE =======
+const PLAYBOOK = `
+SEALIGHTS BDR PLAYBOOK — FULL KNOWLEDGE BASE
+
+=== ABOUT SEALIGHTS ===
+SeaLights is a Quality Intelligence platform within Tricentis. It helps teams save on the costs of testing while increasing their release speed by executing only the relevant tests based on code changes for each build and release. It also shows gaps in test suites and flags untested code changes to prevent them from reaching production using smart quality gates.
+Key capabilities:
+- Test Impact Analytics: Auto-select and execute only the critical tests related to code changes for every test type and stage. Teams see 50-80% reduction in regression cycles.
+- Test Gap Analytics / Code Changes Coverage: Automatic identification of untested code changes for every type of test, including UI, E2E, Regression, and manual. Blocks untested code from reaching production.
+- Advanced Code Coverage: Identify which code methods are covered and which are not covered per build, sprint, and release.
+- AI Test Generation: SeaLights uses AI to automatically generate tests for untested code changes, based on the context of each user story, reducing manual work and speeding up test development.
+- Integrates with: Tosca, qTest, Jenkins, GitHub, Azure DevOps, Jira, and more.
+- Supported languages: Java, JavaScript/Angular/React/TypeScript/NodeJS, Scala, Python, C#, .NET, Go, C++ (GCC), C (GCC)
+- NOT supported: Mobile (iOS/Android), Salesforce, Ruby, Oracle, PHP, HTML, Linux
+- Results: Up to 80% fewer escaped defects, 50-90% reduction in test cycle time
+
+=== COLD CALL SCRIPT — BARBARA SCRIPT ===
+"I'm actually calling as a follow-up to a conversation you had with a colleague of mine named Barbara a few months ago. I know it's been a while but do you recall it by any chance or would a short refresh help?
+I'll be very brief. So SeaLights is a Quality Intelligence platform within Tricentis, it knows how to skip tests that are not related to code changes so you can execute only the critical, small subset of tests to reduce your test cycle times and release much faster! It does that for every test type: UI, Regression, End to End... Both Manual and Automated!
+So I was wondering, do you have any long E2E or regression testing cycles at the moment? / Do you have any long CI cycles or gaps in your test suites?"
+
+CTA 1: "I see, the main intention of the call is to perhaps schedule a short demonstration of SL with one of our engineers to showcase how your team will be able to optimize your long tests and prevent escaping defects. If you have the time later on this week, I'd be happy to schedule it."
+CTA 2: "...showcase how your team will be able to guarantee higher quality releases by flagging untested code changes and preventing them from reaching production using smart quality gates."
+CTA 3: "...showcase how you'll be able to optimize manual and automated tests but also prevent escaping defects."
+
+=== SHORT & FOCUSED PITCH (ADVANCED) ===
+"SeaLights is a Quality Intelligence Platform within Tricentis. It helps teams save on the costs of testing while increasing their release speed by executing only the relevant tests based on code changes for each build and release. It also shows gaps in test suites and flags untested code changes to prevent them from reaching production using smart quality gates.
+Our newest AI capabilities include test generation based on code changes, which is extraordinary.
+I was wondering if you have long CI cycles or gaps in your test suites?"
+
+=== WHITE PAPER SCRIPT ===
+"I'm calling since you've downloaded several WPs of ours recently. I was wondering what prompted your interest and if you're familiar with us at all."
+
+=== AI FEATURE SCRIPT (OUTBOUND) ===
+"I'm following up on a previous conversation you had with one of my team members a few months ago. Do you recall it by any chance or would a short refresh help?
+Alright I'll be very brief - Sealights is a quality intelligence platform within Tricentis that leverages AI to optimize test execution and prevent escaping defects. It does that by generating missing test cases based on code changes for the user stories they're related to.
+It also flags modified code that hasn't been tested and skips tests that aren't related to code changes. It does that for all test types - E2E, Regression... both manual and automated.
+Most teams we speak with aren't leveraging AI within their testing efforts - they don't know which tests are missing and which tests they need to develop.
+So I was just wondering - does your team struggle with long CI cycles or escaping defects in production?"
+
+=== ZOOM QUALIFICATION SCRIPT ===
+INTRO: "Hi [Prospect Name], thanks for joining. How are you? My name is [BDR Name], and I'm in charge of business development for Tricentis Sealights. I reached out after researching [Account Name] to identify if we could help solve a few challenges. I came across your profile, and I believe there's a good chance our offerings could benefit your group. My goal today is to elaborate on SL's capabilities and see if we could fit into your workflows and initiatives to schedule a more technical and in-depth overview of the platform with my senior director. Did you get a chance to watch the video attached to the invite?"
+
+Required qualifications to gather: Title (fits ICP), Programming languages, Team size, Type of app (customer-facing/internal), Release frequency, Organizational structure (separate QA team or engineers doing QA), Manual or heavy automation, Types of tests, Escaping defects, Regulations/proof of testing (financial/healthcare/insurance).
+
+PAIN DISCOVERY: "Normally, we're able to identify 2 critical areas where executives like yourself find SL relevant.
+The first one being slow releases. Teams find it difficult to understand which tests are most critical to the upcoming release, making them continuously add new tests and run all of them all the time. This creates a 'snowball' effect, leading to long E2E or regression test cycles, delaying time-to-market, and creating inefficiencies.
+Additionally, most SW teams aren't able to identify areas of the code that haven't been tested properly, specifically newly added or modified code. This creates a gap in test execution, leading to the promotion of untested code changes into production, resulting in escaping defects.
+Out of these two, which one resonates with you the most?"
+
+CLOSING: "So, based on our call today seems like SL could definitely be of help, and I'd like to schedule a demo of the platform with my senior director to discuss the architecture and illustrate a few success stories. When would you have time this week or the next one?"
+
+=== DEMO HANDOFF TO AE ===
+"Hi [Prospect Name], thank you so much for joining how are you? So let me do a quick round of introductions... My name is [BDR Name] and I work closely with [AE Name] who'll be leading the conversation over Sealights. [AE Name] has been with us for quite some time and has worked with many of our customers similar to [Account Name].
+[Prospect Name], when we spoke on the phone a week ago you let me know that your primary interest was understanding how to:
+1. Optimize your test execution as your team currently runs all tests all the time
+2. Prevent escaping defects from reaching production by gaining visibility to modified code that hasn't been tested.
+3. Reduce costs of testing by allocating your resources more efficiently.
+You also let me know that your team primarily develops in [programming language] inhouse right? Great, so thanks again for your time! I'll be handing it off to [AE name] to take it on from here. Enjoy!"
+
+=== MAGIC PARAGRAPH — DEV/ENG PERSONA ===
+"Just out of curiosity, do you run ALL of your tests ALL the time? YES → How long does it usually take to run a full suite of E2E or regression tests?
+I'd just like to note that SL isn't a test automation or framework tool, but rather a layer of AI that sits on top of your CI/CD that knows how to correlate code changes to specific tests and then automatically prioritize your test strategy accordingly.
+So when your team needs quick feedback during a hotfix for example – they would run only the critical subset related to changes. So you optimize on one hand but also prevent escaping defects.
+So if this topic interests you, or you think it would be useful for your department or team, the main intention of the call is to perhaps schedule a short demonstration of it just to show you how it works. I think you'd be amused by it."
+
+=== MAGIC PARAGRAPH — QA/QE PERSONA ===
+"SL isn't a test framework or automation tool, but rather a layer of AI that sits on top of your CI/CD, showing you where you have testing gaps, quality risks like untested code changes and preventing them from reaching production.
+It is able to cover ALL test stages, not just unit tests, and recommends which subset of tests need to be executed in every run."
+
+=== OBJECTION HANDLING ===
+
+OBJECTION: Send me an email / I'll provide info over email
+RESPONSE: "I can provide you all the information over email, but from my experience – what I find most efficient, as most of my emails go to spam, is to perhaps set a tentative slot on the calendar and I'll provide the information there. That way you'll be able to go over the material and we'll have a placeholder for us not to forget as I'm sure you're very busy. So if you have some time next week you know is generally available, I'll send you an invite quickly."
+
+OBJECTION: We have an inhouse solution
+RESPONSE: "Excellent! It's good to hear that your team acknowledges the challenges we help solve. I just have to say that we do have some customers similar to you that tried to develop this solution in house, by themselves, and they just couldn't reach the level of accuracy and efficiency. There is no other tool that knows how to do code-to-test mapping for ALL test types to flag untested modified code and skip tests that are not related to code changes."
+
+OBJECTION: We already use Tricentis / another automation platform
+RESPONSE: "That's great to hear! SeaLights was built to complement that. It integrates natively with Tosca, qTest, Jenkins, GitHub, Azure, and more. In fact, many of our existing Tricentis customers already have SeaLights installed and are using it to extend their visibility beyond test automation - directly into their CI/CD pipelines and code changes."
+
+OBJECTION: We don't have budget
+RESPONSE: "Thanks for being upfront regarding your budget and I am glad you find the platform interesting. To be frank our sales cycles take about 3 quarters so we're not aiming for this quarter's or the next budget... The main intention here is to showcase the platform to you and see if we fit into your initiatives and technology, also set a point of contact with my senior director for future reference. So if you have some time later on this week, I'd be happy to schedule it."
+
+OBJECTION: I'm not a DM
+RESPONSE: "That's alright, we're not looking for any DMs at this point – just primarily the personas who are dealing with the issues we help solve to see if there's any relevance to your practice. In the demo we'll discuss the challenges we help solve, the architecture behind it and the platform itself. I believe you'd be amused by it. So if this topic interests you, or you think it would be useful for your department or team, the main intention of the call is to perhaps schedule a short demonstration of it just to show you how it works."
+
+OBJECTION: Not relevant / That's not our focus
+RESPONSE: "I see - well, the interesting thing is that SeaLights goes way beyond overall code coverage visibility. It's really about engineering efficiency and release confidence. For example, SeaLights automatically detects new or changed code that hasn't been tested yet and uses AI to generate the missing tests based on the changes made, helping your teams close those gaps and increase efficiency. Ultimately SeaLights will reduce wasted time, improve developer productivity, and help you release faster with less risk."
+
+OBJECTION: How does it work?
+RESPONSE: "That's a great question, to be honest with you the main intention of the call is to showcase the platform to you with one of our product experts who'll be able to give you a more technical answer than I can provide, I don't want to mislead you. You'll discuss the platform in further detail, I believe you'd be amused by it. So if you have time later on this week, I'd be happy to set that up."
+
+OBJECTION: I don't handle QA
+RESPONSE: "That's alright, it's not aimed just for QA teams – SL integrates with Jira and Azure DevOps to provide modified code coverage at the User Story level. It provides a breakdown of code coverage, for each user story, so you can see if you have user stories that are not tested, by EVERY test type, and what's their exact code coverage, so your team can know exactly where you have gaps, and which tests to develop. We also show you if you have code methods that have been changed and were not tested, meaning Code Changes Coverage, per build, per release, per sprint and per User Story."
+
+OBJECTION: We use SonarQube / we already have a coverage tool
+RESPONSE: "Actually, Sonar is completely different; most of our customers actually use SonarQube or Jacoco. While Sonar provides partial coverage, and only for the Unit Test level, SeaLights provides coverage for all test types such as E2E, Regression, Integration, whether they are manual or automated. SeaLights provides much more than Coverage, it will also skip irrelevant tests that you don't need to execute, those who are not related to recent code changes, and more..."
+
+OBJECTION: I'm not the right person
+RESPONSE: "Oh sure, totally understand, just to make sure I'm not completely off here, are you more focused on the engineering side, or are testing and releasing visibility handled by someone else on your team? [If they say 'I lead dev, but this sounds more QA-ish'] I see. Well, I just want to point out the fact that SeaLights isn't just a QA tool, it's really about improving CI/CD efficiency and giving dev teams faster feedback on whether their code is properly covered or introducing new risks. So many of our engineering leads use it to optimize test cycles and spot quality risks early."
+
+OBJECTION: High-Level Exec / C-Level objection
+RESPONSE: "I understand that it isn't part of your responsibilities to attend demos. From my experience, executives like yourself find SL interesting and relevant as it is a strategic tool designed to help large organizations like [Account Name] shift left and change their testing practices by: 1) Having the visibility to modified code that hasn't been tested and preventing it from reaching production. 2) Allocating resources more efficiently by focusing test execution on the critical tests only and skipping irrelevant ones. What I'm proposing is to showcase some success stories of our customers and explain how it works with the executives from my end. We will proceed with the proper channels as you prefer."
+
+=== EMAIL TEMPLATES ===
+
+COLD CALL FOLLOW-UP EMAIL:
+Subject: Reduce testing cycle time without compromising quality
+"Hi [Name],
+It was a pleasure speaking with you today, I hope we reconnect soon.
+Tricentis SeaLights is a next-generation Quality Intelligence platform designed for enterprise quality engineering teams. It empowers Dev and QA teams to accelerate testing cycles and increase quality.
+SeaLights capabilities:
+• Test impact analytics - Auto-select and execute only the critical tests related to code changes for every test type and stage.
+• Test gap analytics - Block untested code changes from reaching production.
+• Generate tests with AI: SeaLights uses AI to automatically generate tests for untested code changes, based on the context of each user story.
+• Advanced code coverage - Gain comprehensive code coverage for every test type
+5-minute overview: https://tricentis-video.wistia.com/medias/xkidbjli0a
+I'd appreciate the opportunity to showcase our solution in a short demonstration with one of my executives.
+Best,"
+
+NO RESPONSE FOLLOW-UP:
+"Hi [Name],
+Did you get a chance to review my previous email? I really hope we could meet this week."
+
+SUGGESTED INVITE / MEETING:
+Subject: [Company] <> SeaLights | Introduction
+"Hi [Name], to follow up on our previous conversation - I set a tentative slot for us to showcase SeaLights for your quality initiatives and leveraging AI within your processes. I hope this works for you!
+Watch a 5-minute overview of Tricentis SeaLights: https://tricentis-video.wistia.com/medias/xkidbjli0a
+In this session, we will cover how SeaLights Quality Intelligence Platform can help with:
+• Generate missing tests with AI
+• Reduce long & expensive testing cycles (save up to 90% of release cycle time)
+• Minimize production defects
+• Focus your organizational quality strategy
+Best regards,"
+
+MEETING DECLINED FOLLOW-UP:
+"Thanks for letting me know [Name]. Would [New Time] work better for you?"
+
+MEETING ACCEPTED:
+"Thanks for accepting my invite [First name], looking forward. Also, to tailor the session to your needs, could you please share the primary programming languages your teams use to develop your homegrown applications? (e.g. Java, C++, Python)?"
+
+=== LINKEDIN MESSAGING SEQUENCE ===
+
+CONNECTION REQUEST: "Hi [Prospect Name], in light of your experience in software engineering, I'd like to connect."
+
+FIRST MESSAGE (after connecting):
+"Hi [Prospect Name], glad to be connected! To follow up on our conversation, I wanted to invite you to a live demonstration over Zoom on SeaLights.
+During this session, you will discover how to:
+1. Shorten your testing cycles by 50%-90% by executing only the tests that are directly related to code changes.
+2. Identify and block untested code changes from reaching production at any test stage, including E2E, Regression, Integration, and Manual testing.
+Can we schedule a 30-minute meeting for this or next week?"
+
+SECOND MESSAGE:
+"Hi again, [Prospect Name]. One of our customers, a leading cybersecurity firm, reduced its CI Cycle Time by 88% with Test Impact Analytics. By automatically selecting only tests related to code changes, the team reduced build time by 35 minutes. Over a year, they saved 700+ hours of CI and developer time. Would next [Day] work for you?"
+
+THIRD MESSAGE:
+"Hi there, [Prospect Name]! Did you get a chance to review my previous messages? I really hope we can meet next week."
+
+=== AUTOMATION MEETING HANDLING ===
+
+DECLINED MEETINGS:
+1. Move meeting 2 business days forward
+2. Send: "Thanks for letting me know [Name]. Would [New Time] work better for you?"
+3. Wait for response
+4. If positive → Qualify → Delete suggested word from invite → Change color to green
+5. If no response → Check WhatsApp. If reachable → Ask Adi to message. If not → Let Adi know
+
+TENTATIVE MEETINGS:
+1. Respond ASAP
+2. Move meeting 2 hours forward
+3. Send: "Hi, I saw you tentatively accepted, does this time work better for you?"
+4. Try to reach by phone
+5. If positive → Qualify → Change color green. If no answer → Check WhatsApp
+
+PROPOSED NEW TIME:
+1. Respond ASAP
+2. Send: "Hi [First Name], this time works – I just sent an updated invite. Did it come through?"
+3. Try to reach by phone
+
+ACCEPTED MEETINGS:
+1. Check who confirmed (lead or assistant)
+2. If lead confirmed: Send "Thanks for accepting my invite [first name], looking forward. Also, to tailor the session, could you please share the primary programming languages your teams use?"
+3. Wait 1 hour, then call directly to qualify
+4. Must qualify BEFORE the meeting: programming language, valid pain, ICP title, supported tech stack
+
+IMPORTANT PRINCIPLES:
+- Speed is Everything: When a lead replies, they're at their desk. Engage immediately.
+- We don't give up on leads: Keep calling, keep following up until we book
+- We must qualify: Must talk to the lead and qualify PRIOR to the meeting
+- Keep things organized: Set reminders, mark Accepted, use different colors
+
+=== CALL DISPOSITION REASONS ===
+Not interested now (NIN): Relevant person but not interested
+Irrelevant territory (IT): Relevant person but wrong territory (India/Iran)
+Too low level (TLL): Relevant person but manager/engineer level
+Irrelevant Persona (IP): Not related to software
+Company too small (CTS)
+Too immature (TI): No CI/CD, not enough development
+Tech Stack Not Supported (TSNS)
+Irrelevant company (IC)
+Follow-up Hang-up (FUHU): Didn't hear pitch
+Follow-up Interested (FUI): Heard pitch, interested
+Demo Scheduled (DS)
+
+=== S1 QUALIFICATION CRITERIA ===
+- Relevant ICP: Director and above, Tier 1 or Tier 2 account
+- Supported Tech Stack
+- Valid Pain: Escaping Defects, Long CI Cycles, Excessive Manual Efforts, Inefficient Automation, High Costs, Developer Productivity, Speed Up Releases
+
+=== S2 CRITERIA ===
+- Prospect is qualified DM with buying power OR has access to executive sponsor
+- Validated pain to be solved in 3 quarter timeframe
+- Technical Demo scheduled and confirmed
+
+=== ICP QUALIFICATIONS ===
+A lead will be marked as Qualified only if:
+- Title/Campaign does NOT contain SAP, ABAP, or S/4HANA
+- Role level is NOT "Low Level" (includes consultants as low level)
+- Company name does NOT include School, University, or Tricentis
+- Vertical is NOT public sector
+- Industry is NOT: Business Services, Education, Churches, Non-Profit, Consultants, Government
+- Account Geo is NOT in LATAM, APAC, EMEA, or Middle East
+- SeaLights ARR is 0 or blank
+- Email domain is NOT @tricentis.com
+
+=== DAILY GAMEPLAN FRAMEWORK ===
+Each morning check:
+- How many S0s do I have for current month?
+- How many S1s do I have for current month?
+- What's the gap from target and sub-target?
+- Am I on track? Off track?
+- What are my conversion rates?
+- Gameplan: New leads? Strategize? Focus on follow-ups? Different geo?
+
+=== EXISTING CUSTOMERS (FOR REFERENCE) ===
+Financial: Fidelity, Discover, Northern Trust, PayPal, Capital One, JPMorgan, Citizens Bank, Deutsche Bank, BMO, City National Bank
+Insurance: HCSC, Elevance Health, Intact, CNA Financial
+Manufacturing: Jabil, Cisco, Dell, Smith & Nephew
+Telecom, Software: Sophos, Global Payments, Veeva, ADP
+Energy: GE Vernova | Medical: GE Healthcare | Media: Pluto TV (Paramount)
+`;
+
+// ======= STATE =======
+let selectedScript = '';
+let selectedObjection = '';
+let selectedOutcome = '';
+
+// ======= API KEY MANAGEMENT =======
+function openSettings() {
+  document.getElementById('settingsModal').classList.add('open');
+  const saved = localStorage.getItem('sl_gemini_key');
+  if (saved) document.getElementById('apiKeyInput').value = saved;
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) return alert('Please enter a valid API key.');
+  localStorage.setItem('sl_gemini_key', key);
+  updateApiStatus();
+  closeSettings();
+}
+async function testApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const resultEl = document.getElementById('testResult');
+  if (!key) { resultEl.innerHTML = '<span style="color:var(--accent)">Please enter a key first.</span>'; return; }
+  resultEl.innerHTML = '<span style="color:var(--text-dim)">Testing connection...</span>';
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Say only: OK' }] }], generationConfig: { maxOutputTokens: 5 } })
+    });
+    if (res.ok) {
+      resultEl.innerHTML = '<span style="color:var(--success)">Key works! Click Save Key to continue.</span>';
+    } else {
+      const err = await res.json().catch(() => ({}));
+      resultEl.innerHTML = '<span style="color:var(--accent)">Invalid key: ' + (err?.error?.message || 'please check and try again') + '</span>';
+    }
+  } catch(e) {
+    resultEl.innerHTML = '<span style="color:var(--accent)">Network error. Make sure you are online. IMPORTANT: The app must be hosted on GitHub Pages — it will NOT work when opened as a local file due to browser security.</span>';
+  }
+}
+function updateApiStatus() {
+  const key = localStorage.getItem('sl_gemini_key');
+  const dot = document.getElementById('apiDot');
+  const status = document.getElementById('apiStatus');
+  if (key) {
+    dot.classList.add('connected');
+    status.textContent = 'API Connected';
+  } else {
+    dot.classList.remove('connected');
+    status.textContent = 'Setup API Key';
+  }
+}
+updateApiStatus();
+
+// ======= TAB NAVIGATION =======
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const tabs = ['dashboard','scripts','objections','email','nextsteps','qualify','dispos'];
+  const idx = tabs.indexOf(name);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+}
+
+// ======= GEMINI API CALL =======
+async function callGemini(prompt) {
+  const key = localStorage.getItem('sl_gemini_key');
+  if (!key) {
+    openSettings();
+    throw new Error('No API key set. Please add your Gemini API key.');
+  }
+
+  // Try all available free-tier models in order of preference
+  const models = [
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-flash-latest',
+  ];
+
+  let lastError = null;
+  let allQuotaExhausted = true;
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1500,
+            topK: 40,
+            topP: 0.95
+          },
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+          ]
+        })
+      });
+
+      // Model doesn't exist — try next
+      if (response.status === 404) { lastError = `Model ${model} not found`; continue; }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const msg = data?.error?.message || `HTTP ${response.status}`;
+
+        // Invalid key — no point trying other models
+        if (response.status === 401 || response.status === 403 ||
+            msg.toLowerCase().includes('api key not valid') ||
+            msg.toLowerCase().includes('invalid api key')) {
+          throw new Error('❌ Invalid API key. Click "Setup API Key" (top right) and re-enter your key from aistudio.google.com.');
+        }
+
+        // Quota exhausted on this model — try next one
+        if (response.status === 429 || msg.toLowerCase().includes('quota')) {
+          lastError = `quota_exceeded`;
+          continue;
+        }
+
+        // Other error — try next model
+        lastError = msg;
+        allQuotaExhausted = false;
+        continue;
+      }
+
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+
+      lastError = 'Empty response';
+      continue;
+
+    } catch (e) {
+      // Re-throw errors we intentionally threw above
+      if (e.message.startsWith('❌')) throw e;
+
+      if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.name === 'TypeError') {
+        throw new Error('🌐 Network error — check your internet connection and try again.');
+      }
+
+      lastError = e.message;
+      continue;
+    }
+  }
+
+  // All models failed — give a helpful message
+  if (lastError === 'quota_exceeded' || allQuotaExhausted) {
+    throw new Error(
+      '⏳ Daily quota reached on all free models.\n\n' +
+      'You have 2 options:\n' +
+      '1. Wait until tomorrow — the free quota resets every 24 hours.\n' +
+      '2. Go to aistudio.google.com → "Get API key" → create a NEW key and paste it in Settings (top right).'
+    );
+  }
+
+  throw new Error('❌ Could not get a response. Please check your API key in Settings and try again.');
+}
+
+function showLoading(el) {
+  el.classList.add('visible');
+  el.querySelector('.ai-content').innerHTML = '<div class="loading">🤖 <span>Checking playbook</span><span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+}
+function showResult(contentEl, text) {
+  // Simple markdown-like formatting
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^### (.*$)/gm, '<strong style="color:var(--accent3)">$1</strong>')
+    .replace(/^## (.*$)/gm, '<strong style="font-size:14px;color:var(--accent2)">$1</strong>')
+    .replace(/^# (.*$)/gm, '<strong style="font-size:15px;color:var(--accent)">$1</strong>');
+  contentEl.innerHTML = formatted;
+}
+
+// ======= CALL SCRIPTS =======
+function selectScript(el, type) {
+  document.querySelectorAll('.script-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedScript = type;
+  document.getElementById('scriptCustomInput').style.display = 'block';
+}
+
+async function getScript() {
+  if (!selectedScript) return alert('Please select a script type first.');
+  const result = document.getElementById('scriptResult');
+  const content = document.getElementById('scriptContent');
+  showLoading(result);
+  const prospect = document.getElementById('scriptProspect').value || '[Prospect Name]';
+  const company = document.getElementById('scriptCompany').value || '[Company]';
+  const persona = document.getElementById('scriptPersona').value || '';
+  const scriptMap = {
+    cold_call: 'Barbara cold call script',
+    short_advanced: 'Short and focused advanced pitch',
+    wp_script: 'White paper/inbound script',
+    ai_feature: 'AI feature script',
+    zoom_qual: 'Zoom qualification call script',
+    demo_handoff: 'Demo handoff to AE script',
+    dev_magic: 'Magic paragraph for Dev/Engineering persona',
+    qa_magic: 'Magic paragraph for QA/QE persona',
+  };
+  const scriptName = scriptMap[selectedScript];
+  const prompt = `You are the SeaLights BDR Coach. Use ONLY the playbook knowledge below. Do not add any information not in the playbook.
+
+PLAYBOOK:
+${PLAYBOOK}
+
+TASK: Provide the complete "${scriptName}" script. 
+Prospect Name: ${prospect}
+Company: ${company}
+Persona: ${persona || 'not specified'}
+
+Replace placeholders like [Prospect Name], [Company], [BDR Name] etc. with the provided details.
+Format clearly with sections. Include all CTAs and variations from the playbook.
+If the persona is specified, add a note at the end about any persona-specific adjustments from the playbook.`;
+  try {
+    const text = await callGemini(prompt);
+    showResult(content, text);
+  } catch (e) {
+    content.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ======= OBJECTION HANDLER =======
+function selectObjPill(el, type) {
+  document.querySelectorAll('.obj-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedObjection = type;
+  const labels = {
+    send_email: 'Send me an email',
+    inhouse_solution: 'We have an inhouse solution',
+    already_tool: 'We already have a tool',
+    no_budget: 'We don\'t have budget',
+    not_dm: "I'm not a DM",
+    not_relevant: "That's not our focus / not relevant",
+    how_does_it_work: 'How does it work?',
+    not_qa: "I don't handle QA",
+    tricentis_existing: 'We already use Tricentis / another automation platform',
+    clevel_exec: 'High-Level Exec / C-Level pushback',
+    not_right_person: "I'm not the right person",
+    sonarqube: 'We use SonarQube / already have a coverage tool',
+  };
+  document.getElementById('customObjection').value = labels[type] || '';
+  handleObjection();
+}
+
+async function handleObjection() {
+  const objText = document.getElementById('customObjection').value.trim();
+  if (!objText) return alert('Please select or type an objection.');
+  const result = document.getElementById('objectionResult');
+  const content = document.getElementById('objectionContent');
+  showLoading(result);
+  const prompt = `You are the SeaLights BDR Coach. Use ONLY the playbook knowledge below. Do not add any information not in the playbook. If the answer is not in the playbook, say: "This specific scenario isn't covered in our playbook — please check with your manager."
+
+PLAYBOOK:
+${PLAYBOOK}
+
+TASK: The prospect just said: "${objText}"
+Provide the exact playbook response to this objection. Include:
+1. The exact script/response to use verbatim
+2. Any follow-up questions to ask
+3. The CTA to use at the end
+
+Format clearly. Be direct and practical.`;
+  try {
+    const text = await callGemini(prompt);
+    showResult(content, text);
+  } catch (e) {
+    content.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ======= EMAIL DRAFTER =======
+async function draftEmail() {
+  const result = document.getElementById('emailResult');
+  const content = document.getElementById('emailContent');
+  const name = document.getElementById('emailName').value || '[First Name]';
+  const company = document.getElementById('emailCompany').value || '[Company]';
+  const title = document.getElementById('emailTitle').value || '';
+  const emailType = document.getElementById('emailType').value;
+  const callNotes = document.getElementById('emailCallNotes').value;
+  const linkedin = document.getElementById('emailLinkedin').value;
+  const pain = document.getElementById('emailPain').value;
+  showLoading(result);
+  const typeLabels = {
+    cold_call_followup: 'Cold Call Follow-Up (prospect asked for more info)',
+    no_response: 'No Response Follow-Up (they have not replied)',
+    invite: 'Demo Invite / Suggested Meeting Slot',
+    meeting_declined: 'Meeting Declined — Reschedule',
+    meeting_accepted: 'Meeting Accepted — Confirmation with qualification ask',
+    assistant_fwd: 'Via Assistant — message to forward to the lead',
+  };
+  const prompt = `You are the SeaLights BDR Coach. Use ONLY the email templates and playbook knowledge below. Do not invent information, statistics, or claims not present in the playbook.
+
+PLAYBOOK:
+${PLAYBOOK}
+
+TASK: Draft a "${typeLabels[emailType]}" email.
+Prospect Name: ${name}
+Company: ${company}
+Title: ${title || 'not provided'}
+Call Notes: ${callNotes || 'not provided'}
+LinkedIn Info: ${linkedin || 'not provided'}
+Primary Pain Identified: ${pain || 'not specified'}
+
+Instructions:
+1. Use the email template from the playbook as the base structure
+2. Personalize using the call notes and LinkedIn info provided
+3. Keep it aligned with the playbook tone (professional, brief, non-pushy)
+4. Include the subject line
+5. Do not use statistics or claims not mentioned in the playbook
+6. End with the appropriate CTA from the playbook
+
+Format: Subject line first, then the email body.`;
+  try {
+    const text = await callGemini(prompt);
+    showResult(content, text);
+    document.getElementById('emailActions').style.display = 'flex';
+  } catch (e) {
+    content.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+function copyEmail() {
+  const text = document.getElementById('emailContent').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy to Clipboard', 2000);
+  });
+}
+
+// ======= NEXT STEPS =======
+function selectOutcome(el, type) {
+  document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedOutcome = type;
+  document.getElementById('nextStepsContext').style.display = 'block';
+}
+
+async function getNextSteps() {
+  if (!selectedOutcome) return alert('Please select a call outcome.');
+  const result = document.getElementById('nextStepsResult');
+  const content = document.getElementById('nextStepsContent');
+  showLoading(result);
+  const prospect = document.getElementById('nsProspect').value || '[Prospect]';
+  const notes = document.getElementById('nsNotes').value;
+  const outcomeLabels = {
+    connected_interested: 'Connected with prospect — they heard the pitch and are interested but no meeting set yet',
+    demo_scheduled: 'Demo / Meeting was scheduled',
+    followup_hangup: 'Connected but they hung up or didn\'t hear the full pitch — need to follow up',
+    not_interested: 'Prospect said they are not interested',
+    no_answer: 'No answer on the call',
+    meeting_declined: 'Meeting invite was declined',
+    meeting_tentative: 'Meeting was marked as tentative',
+    meeting_proposed_new_time: 'Prospect proposed a new time',
+    meeting_accepted: 'Meeting was accepted / confirmed',
+  };
+  const prompt = `You are the SeaLights BDR Coach. Use ONLY the playbook knowledge below. Do not add any steps not in the playbook.
+
+PLAYBOOK:
+${PLAYBOOK}
+
+TASK: The BDR just had a call with ${prospect}.
+Outcome: ${outcomeLabels[selectedOutcome]}
+Additional notes: ${notes || 'none'}
+
+Provide the exact next steps according to the playbook. Include:
+1. Immediate actions (what to do right now)
+2. What dispo/cadence to log in SalesLoft
+3. Any messages to send (exact wording from playbook)
+4. Any follow-up timing rules
+5. What emoji to use in the Slack channel (if inbound)
+
+Be specific and actionable. Reference exact playbook language.`;
+  try {
+    const text = await callGemini(prompt);
+    showResult(content, text);
+  } catch (e) {
+    content.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ======= QUALIFY =======
+async function qualifyLead() {
+  const input = document.getElementById('qualifyInput').value.trim();
+  if (!input) return alert('Please describe the lead first.');
+  const result = document.getElementById('qualifyResult');
+  const content = document.getElementById('qualifyContent');
+  showLoading(result);
+  const prompt = `You are the SeaLights BDR Coach. Use ONLY the ICP qualification criteria from the playbook below. Do not use external knowledge.
+
+PLAYBOOK:
+${PLAYBOOK}
+
+TASK: Based on the playbook's ICP qualification criteria, assess whether this lead should be booked:
+"${input}"
+
+Provide:
+1. ✅ BOOK or ❌ DON'T BOOK — with clear reasoning
+2. Check each qualification criterion from the playbook (go through the full list)
+3. Any red flags to watch out for
+4. What qualification questions to still ask if unclear
+5. Suggested dispo code from the playbook if not booking
+
+Be direct and reference specific playbook rules.`;
+  try {
+    const text = await callGemini(prompt);
+    showResult(content, text);
+  } catch (e) {
+    content.textContent = '❌ Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

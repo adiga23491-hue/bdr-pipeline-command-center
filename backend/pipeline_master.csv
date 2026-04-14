@@ -1,0 +1,17 @@
+Id,Opp_Name,Stage,Meeting_Date,Languages,Pain_Validated,Source,Link,Last_Updated
+64f84e37-067d-4796-818a-dee9371e335d,Datadog — Observability Stack Overhaul,S1,2026-04-03,"Go,Python",true,Outbound,https://datadoghq.com,2026-04-14T11:48:37.223Z
+cb17b1dd-9dfa-4847-a464-3589620db9bf,Shopify — Checkout Service Rewrite,S1,2026-04-10,"Ruby,TypeScript",true,LinkedIn,https://shopify.com,2026-04-14T11:46:36.279Z
+50e2cc68-0353-43eb-880f-9cd0ceb1e758,Palantir — Data Pipeline Modernization,S0 Occurred,2026-04-14,"Java,Scala",true,Referral,https://palantir.com,2026-04-14T11:46:36.290Z
+f56e49d0-6df9-4124-ad11-69f091f1fa5a,Snowflake — Query Optimization Initiative,S0 Occurred,2026-04-11,"Python,C++",false,Inbound,https://snowflake.com,2026-04-14T11:46:36.300Z
+c0b16f88-6ea2-455a-9d15-07b9b44d1b02,Figma — Plugin Runtime Expansion,S0 Occurred,2026-04-16,"TypeScript,Rust",true,Cold Call,https://figma.com,2026-04-14T11:46:36.309Z
+6c78aa83-f9bd-42da-a069-ea9a42269b6f,Confluent — Kafka Migration Project,S0,2026-04-22,"Java,Go",false,LinkedIn,https://confluent.io,2026-04-14T11:46:36.339Z
+78236e7f-eac5-42e4-b212-8fd33cc4c2da,HashiCorp — Infra Automation Platform,S0,2026-04-24,"Go,Python",false,Event,https://hashicorp.com,2026-04-14T11:52:45.568Z
+5178ab63-5d9b-4d09-b5fe-a1f54ec7774a,Notion — API Gateway Rebuild,S0,2026-04-28,"TypeScript,Go",false,Outbound,https://notion.so,2026-04-14T11:46:36.358Z
+b72c94ac-6c50-4278-a3de-10c0990a2677,Vercel — Edge Runtime Expansion,S0,2026-05-01,"TypeScript,Rust",false,Partner,https://vercel.com,2026-04-14T11:46:36.365Z
+fd17a189-b0d5-4a8c-81db-211369a3b868,Linear — Workflow Automation Suite,Meeting Not Accepted,2026-05-06,TypeScript,false,LinkedIn,https://linear.app,2026-04-14T11:46:36.372Z
+3ffc3473-5463-4901-a325-537b5153bec6,Retool — Backend Integration Layer,Meeting Not Accepted,2026-05-08,"JavaScript,Python",false,Outbound,https://retool.com,2026-04-14T11:46:36.379Z
+715bae83-ff36-4b5a-9460-2a36bdb8c955,Supabase — Real-time Infra Scale,Meeting Not Accepted,2026-05-12,"TypeScript,Go",false,Cold Call,https://supabase.com,2026-04-14T11:46:36.386Z
+f6c48821-a573-4296-ac0c-ffaf57dc10ab,PlanetScale — Schema Change Automation,Meeting Not Accepted,2026-05-15,"Go,Ruby",false,Inbound,https://planetscale.com,2026-04-14T11:46:36.394Z
+ab4ded6f-06de-4942-8c26-e8170ddabb3c,Temporal — Microservice Orchestration,Meeting Not Accepted,2026-05-19,"Java,Go",false,,https://temporal.io,2026-04-14T11:52:36.513Z
+6b2c59ce-724d-4363-982a-eacb53c807a2,SeaLights Co,S1,2026-04-16,"Java,Go",true,,https://www.linkedin.com/feed/,2026-04-14T11:52:14.189Z
+a30b99f2-f603-4a55-be5f-955861598561,New Opportunity,S0 Occurred,,,false,,,2026-04-14T14:19:06.885Z

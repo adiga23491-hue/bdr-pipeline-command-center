@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Users/eyalyadin/.bun/bin/bun install:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s -X POST http://localhost:3001/api/opportunities -H 'Content-Type: application/json' -d '{\"Opp_Name\":\"Stripe Inc — Platform Modernization\",\"Stage\":\"S1\",\"Meeting_Date\":\"2026-04-08\",\"Languages\":\"Java,Python\",\"Pain_Validated\":\"true\",\"Source\":\"Outbound\",\"Link\":\"https://stripe.com\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\('Id','err'\\)\\)\")",
+      "Bash(curl -s -X DELETE http://localhost:3001/api/opportunities/d1a5b311-9cdc-49c5-8d16-a84f53bb2bc9)",
+      "Bash(gh auth:*)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//Users/eyalyadin/.bun/bin/**)",
+      "Bash(git --version)",
+      "Bash(sw_vers -productVersion)",
+      "Bash(sudo cp:*)",
+      "Bash(gh --version)",
+      "Bash(cp /tmp/gh_extracted/gh_2.67.0_macOS_arm64/bin/gh ~/.bun/bin/gh)",
+      "Bash(/Users/eyalyadin/.bun/bin/gh --version)",
+      "Bash(jobs -l)"
+    ]
+  }
+}

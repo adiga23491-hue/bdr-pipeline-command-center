@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+backend/public/
+
+# Bun lockfiles (keep bun.lockb, ignore others)
+package-lock.json
+yarn.lock
+
+# Env files
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# CSV data — keep the template but not live data
+# Comment this out if you want to commit seed data:
+# pipeline_master.csv
