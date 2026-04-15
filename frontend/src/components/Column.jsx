@@ -8,7 +8,7 @@ const STAGE_THEME = {
   'S1':                   { hex: '#00c875', light: '#edfdf5', border: '#b0e8cf', text: '#007038', ring: 'ring-[#00c875]/30' },
 };
 
-export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDraggingId }) {
+export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDraggingId, bdrNames = [] }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const t = STAGE_THEME[stage.id];
 
@@ -50,6 +50,7 @@ export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDragg
               onUpdate={onUpdate}
               onDelete={onDelete}
               isGhost={opp.Id === isDraggingId}
+              bdrNames={bdrNames}
             />
           ))}
 

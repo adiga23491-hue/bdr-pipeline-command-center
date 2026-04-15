@@ -47,7 +47,7 @@ const SOURCE_BADGE = {
   'Email Campaign': 'bg-[#f0e8fd] text-[#6b21a8] border-[#e9d5ff]',
 };
 
-export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, isGhost }) {
+export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, isGhost, bdrNames = [] }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: opp.Id,
     disabled: isOverlay,
@@ -348,6 +348,18 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
             <option value="">Assign AE…</option>
             {AES.map((ae) => <option key={ae} value={ae}>{ae}</option>)}
           </select>
+
+          {/* BDR reassignment dropdown */}
+          {bdrNames && bdrNames.length > 0 && (
+            <select
+              value={opp.BDR_Name || ''}
+              onChange={(e) => onUpdate(opp.Id, { BDR_Name: e.target.value })}
+              className="w-full text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1 cursor-pointer focus:outline-none hover:border-blue-300 focus:border-[#0073ea]"
+            >
+              <option value="">Assign BDR…</option>
+              {bdrNames.map((bdr) => <option key={bdr} value={bdr}>{bdr}</option>)}
+            </select>
+          )}
         </div>
 
         {/* ── Footer: date + delete ──────────────────────────────── */}

@@ -1,1 +1,18 @@
 Id,Opp_Name,Stage,Meeting_Date,Languages,Pain_Validated,Source,Link,BDR_Name,AE_Name,Notes,Last_Updated
+bf92fe0c-70dc-4526-99fd-65bf566a1cc9,S&P Global,S0,2026-04-15,Java,true,Event,,Simon,Daniel,,2026-04-15T11:21:51.091Z
+165dafb0-bb5b-41d6-a288-8a17a44e9571,S&P Global,S1,2026-04-10,Java;Python,true,Event,,Simon,Daniel,,2026-04-15T11:13:38.511Z
+b3191f45-140b-42d0-b9bf-c3435ac75be8,Costar Group,S1,2026-04-13,Python,true,Referral,,Steven,Daniel,,2026-04-15T11:14:09.609Z
+20aeacc1-d412-4d27-ad82-8358795b9216,Fifth Third Bank - Daniel,S0 Occurred,2026-04-07,Java,true,Event,,Simon,Daniel,,2026-04-15T11:25:30.273Z
+83c84092-ea29-41ab-96c9-3d694ced8f44,Charter Communication - Bruce,S0 Occurred,2026-04-10,,true,Event,,Steven,Bruce,,2026-04-15T11:25:40.399Z
+aebe3ef2-b8a4-4064-b6df-03ab2c3ca615,Tyler Technologies,S0,2026-04-15,,true,Cold Call,,Eyal,Jake,,2026-04-15T11:17:15.690Z
+b0128e74-812d-45a3-a799-2fee6841ed9b,Commscope - Arik - Closed Lost,S0,2026-04-20,,true,Cold Call,,Simon,Arik,,2026-04-15T11:27:01.529Z
+7db18f1d-66eb-4110-9d9c-4354a5314430,Uber - Bruce - Closed lost,S0,2026-04-20,,true,Cold Call,,Steven,Bruce,,2026-04-15T11:26:46.273Z
+dfb3a6bd-52fc-4190-b638-6ea790b711dc,Zurich North America,Meeting Not Accepted,,,false,,,Simon,JVL,,2026-04-15T14:35:57.562Z
+d480f95a-2f51-44ca-99e7-353d0ce05e93,Ahold - USA - From last month - Bruce,S0 Occurred,2026-03-31,,false,,,Steven,Bruce,,2026-04-15T11:35:58.484Z
+3453f1c4-5fa5-4ceb-999b-efe89e75d842,UK Post office - JVL,S1,2026-04-09,,true,Cold Call,,Eyal,JVL,,2026-04-15T11:38:49.567Z
+19cf50fc-3b28-4115-8f7a-5e9179066395,Macro helix - Bruce - Closed Lost,S1,2026-04-13,,true,,,Simon,Bruce,,2026-04-15T11:40:39.184Z
+dd8358ea-bfa0-4e1a-89e7-78beea6d1477,HBO - Daniel,S1,2026-04-09,,true,Outbound,,Steven,Daniel,,2026-04-15T11:40:54.934Z
+3ddf65ca-a290-47b9-9ffb-11c145c2e79e,Anthem - Closed Lost - Bruce,S0 Occurred,2026-04-14,Java;Python,true,Partner,,Simon,Bruce,,2026-04-15T11:41:48.306Z
+76de85a5-73c7-4ebc-8686-3e768a40a638,Telefonica - JVL,S0,2026-04-28,,true,Outbound,,Eyal,JVL,,2026-04-15T11:44:20.898Z
+58852612-4d11-4b4d-9fc5-00c44a6be42d,Inspired entertainments - NTA,Meeting Not Accepted,2026-04-16,,true,Cold Call,,Steven,Jake,,2026-04-15T11:45:18.850Z
+e1b23cd6-b5c3-44c1-be85-fd5cce660067,Robert W Baird - NTQ,Meeting Not Accepted,2026-04-17,,false,,,Eyal,Arik,,2026-04-15T11:45:48.393Z

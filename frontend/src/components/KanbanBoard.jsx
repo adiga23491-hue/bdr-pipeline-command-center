@@ -80,6 +80,7 @@ export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBD
             onUpdate={onUpdate}
             onDelete={onDelete}
             isDraggingId={activeId}
+            bdrNames={bdrNames}
           />
         ))}
       </div>

@@ -9,7 +9,7 @@ const STAGE_PILLS = [
   { label: 'S1',           key: 'S1',                   style: 'bg-[#e6f9f1] text-[#007038] border border-[#b0e8cf]' },
 ];
 
-const BDR_NAMES = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'];
+const BDR_NAMES = ['Simon', 'Steven', 'Eyal'];
 
 export default function App() {
   const [opps, setOpps]               = useState([]);
@@ -18,6 +18,8 @@ export default function App() {
   const [currentBDR, setCurrentBDR]    = useState(null);
   const [showBDRModal, setShowBDRModal] = useState(false);
   const [toast, setToast]             = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
 
   const notify = useCallback((msg, type = 'success') => {
     setToast({ msg, type });
@@ -117,7 +119,14 @@ export default function App() {
 
             {/* Dashboard toggle */}
             <button
-              onClick={() => setShowDashboard((s) => !s)}
+              onClick={() => {
+                if (showDashboard) {
+                  setShowDashboard(false);
+                } else {
+                  setShowPasswordModal(true);
+                  setPasswordInput('');
+                }
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
                 showDashboard
                   ? 'bg-[#0073ea] border-[#0073ea] text-white shadow-sm'
@@ -146,6 +155,62 @@ export default function App() {
           <KanbanBoard opps={opps} onAdd={addOpp} onUpdate={updateOpp} onDelete={deleteOpp} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
         )}
       </main>
+
+      {/* ── Password Modal ──────────────────────────────────────────────── */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-80">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Manager Dashboard</h2>
+            <p className="text-sm text-gray-600 mb-6">Enter password to access:</p>
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (passwordInput === '1234') {
+                    setShowDashboard(true);
+                    setShowPasswordModal(false);
+                    setPasswordInput('');
+                  } else {
+                    notify('Incorrect password', 'error');
+                    setPasswordInput('');
+                  }
+                }
+              }}
+              placeholder="Password"
+              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0073ea] mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (passwordInput === '1234') {
+                    setShowDashboard(true);
+                    setShowPasswordModal(false);
+                    setPasswordInput('');
+                  } else {
+                    notify('Incorrect password', 'error');
+                    setPasswordInput('');
+                  }
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#0073ea] hover:bg-[#0063d0] rounded-lg transition-colors"
+              >
+                Unlock
+              </button>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordInput('');
+                }}
+                className="flex-1 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors border border-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Toast ───────────────────────────────────────────────────────── */}
       {toast && (
