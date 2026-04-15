@@ -43,6 +43,8 @@ const COL_HEADERS = [
   { key: 'Languages',     label: 'Languages',       w: 'w-44' },
   { key: 'Pain_Validated',label: 'Pain Validated',  w: 'w-28' },
   { key: 'Source',        label: 'Source',          w: 'w-28' },
+  { key: 'BDR_Name',      label: 'BDR',             w: 'w-28' },
+  { key: 'AE_Name',       label: 'AE',              w: 'w-28' },
   { key: 'Last_Updated',  label: 'Last Updated',    w: 'w-36' },
 ];
 
@@ -106,30 +108,32 @@ function StagePill({ stage }) {
 
 // ── Main component ──────────────────────────────────────────────────────────
 
-export default function ManagerDashboard({ opps }) {
+export default function ManagerDashboard({ opps, currentBDR }) {
+  // Filter opps by currentBDR if set
+  const filteredOpps = currentBDR ? opps.filter((o) => o.BDR_Name === currentBDR) : opps;
   const [sortField, setSortField] = useState('Last_Updated');
   const [sortDir, setSortDir]     = useState('desc');
   const [search, setSearch]       = useState('');
   const [stageFilter, setStageFilter] = useState('All');
 
-  const painCount  = opps.filter((o) => o.Pain_Validated === 'true').length;
-  const painPct    = opps.length ? Math.round((painCount / opps.length) * 100) : 0;
+  const painCount  = filteredOpps.filter((o) => o.Pain_Validated === 'true').length;
+  const painPct    = filteredOpps.length ? Math.round((painCount / filteredOpps.length) * 100) : 0;
 
   const sourceBreakdown = useMemo(() =>
-    opps.reduce((acc, o) => {
+    filteredOpps.reduce((acc, o) => {
       if (o.Source) acc[o.Source] = (acc[o.Source] || 0) + 1;
       return acc;
     }, {}),
-  [opps]);
+  [filteredOpps]);
 
   const topLangs = useMemo(() => {
-    const map = opps
+    const map = filteredOpps
       .flatMap((o) => (o.Languages ? o.Languages.split(',').filter(Boolean) : []))
       .reduce((acc, l) => { acc[l] = (acc[l] || 0) + 1; return acc; }, {});
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  }, [opps]);
+  }, [filteredOpps]);
 
-  const maxStageCount = Math.max(...STAGES.map((s) => opps.filter((o) => o.Stage === s).length), 1);
+  const maxStageCount = Math.max(...STAGES.map((s) => filteredOpps.filter((o) => o.Stage === s).length), 1);
 
   const toggleSort = (field) => {
     if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -137,7 +141,7 @@ export default function ManagerDashboard({ opps }) {
   };
 
   const rows = useMemo(() =>
-    [...opps]
+    [...filteredOpps]
       .filter((o) => {
         const q = search.toLowerCase();
         return (
@@ -150,7 +154,7 @@ export default function ManagerDashboard({ opps }) {
         const vb = (b[sortField] || '').toString();
         return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
       }),
-  [opps, search, stageFilter, sortField, sortDir]);
+  [filteredOpps, search, stageFilter, sortField, sortDir]);
 
   return (
     <div className="-mx-6 -my-6 bg-[#f5f6f8] min-h-screen">
@@ -158,7 +162,9 @@ export default function ManagerDashboard({ opps }) {
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center gap-4">
         <div>
           <h2 className="text-lg font-bold text-gray-800 leading-none">Pipeline Overview</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{opps.length} active opportunities</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {currentBDR ? `${filteredOpps.length} opportunities for ${currentBDR}` : `${filteredOpps.length} active opportunities`}
+          </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
           {/* Stage filter chips */}
@@ -200,8 +206,8 @@ export default function ManagerDashboard({ opps }) {
             <StatCard
               key={stage}
               stage={stage}
-              count={opps.filter((o) => o.Stage === stage).length}
-              total={opps.length}
+              count={filteredOpps.filter((o) => o.Stage === stage).length}
+              total={filteredOpps.length}
             />
           ))}
         </div>

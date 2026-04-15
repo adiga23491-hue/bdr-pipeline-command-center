@@ -9,10 +9,14 @@ const STAGE_PILLS = [
   { label: 'S1',           key: 'S1',                   style: 'bg-[#e6f9f1] text-[#007038] border border-[#b0e8cf]' },
 ];
 
+const BDR_NAMES = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'];
+
 export default function App() {
   const [opps, setOpps]               = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [currentBDR, setCurrentBDR]    = useState(null);
+  const [showBDRModal, setShowBDRModal] = useState(false);
   const [toast, setToast]             = useState(null);
 
   const notify = useCallback((msg, type = 'success') => {
@@ -22,16 +26,17 @@ export default function App() {
 
   // ── Load opportunities ─────────────────────────────────────────────────────
   useEffect(() => {
-    fetch('/api/opportunities')
+    const url = currentBDR ? `/api/opportunities?bdr=${encodeURIComponent(currentBDR)}` : '/api/opportunities';
+    fetch(url)
       .then((r) => r.json())
       .then((data) => { setOpps(Array.isArray(data) ? data : []); setDataLoading(false); })
       .catch(() => { notify('Could not reach backend', 'error'); setDataLoading(false); });
-  }, [notify]);
+  }, [notify, currentBDR]);
 
   // ── CRUD ───────────────────────────────────────────────────────────────────
-  const addOpp = useCallback(async (stage) => {
+  const addOpp = useCallback(async (stage, bdrName) => {
     const tempId = `temp-${Date.now()}`;
-    const draft = { Id: tempId, Opp_Name: 'New Opportunity', Stage: stage, Meeting_Date: '', Languages: '', Pain_Validated: 'false', Source: '', Link: '', Last_Updated: new Date().toISOString() };
+    const draft = { Id: tempId, Opp_Name: 'New Opportunity', Stage: stage, Meeting_Date: '', Languages: '', Pain_Validated: 'false', Source: '', Link: '', BDR_Name: bdrName || '', AE_Name: '', Notes: '', Last_Updated: new Date().toISOString() };
     setOpps((prev) => [draft, ...prev]);
     try {
       const res  = await fetch('/api/opportunities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
@@ -72,7 +77,9 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-sm font-bold text-gray-800 leading-none tracking-tight">BDR Pipeline</h1>
-              <p className="text-xs text-gray-400 leading-none mt-0.5">Command Center</p>
+              <p className="text-xs text-gray-400 leading-none mt-0.5">
+                {currentBDR ? `${currentBDR}'s View` : 'All Opportunities'}
+              </p>
             </div>
           </div>
 
@@ -86,6 +93,18 @@ export default function App() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            {/* BDR Filter */}
+            <select
+              value={currentBDR || ''}
+              onChange={(e) => setCurrentBDR(e.target.value || null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg transition-colors bg-white cursor-pointer hover:border-gray-300 focus:outline-none focus:border-[#0073ea]"
+            >
+              <option value="">All BDRs</option>
+              {BDR_NAMES.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+
             <a
               href="/api/export"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded-lg transition-colors bg-white"
@@ -122,9 +141,9 @@ export default function App() {
             <p className="text-sm text-gray-400">Loading pipeline…</p>
           </div>
         ) : showDashboard ? (
-          <ManagerDashboard opps={opps} />
+          <ManagerDashboard opps={opps} currentBDR={currentBDR} />
         ) : (
-          <KanbanBoard opps={opps} onAdd={addOpp} onUpdate={updateOpp} onDelete={deleteOpp} />
+          <KanbanBoard opps={opps} onAdd={addOpp} onUpdate={updateOpp} onDelete={deleteOpp} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
         )}
       </main>
 

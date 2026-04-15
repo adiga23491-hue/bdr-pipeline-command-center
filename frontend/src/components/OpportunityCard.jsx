@@ -2,11 +2,13 @@ import { useDraggable } from '@dnd-kit/core';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 const LANGUAGES = [
-  'Java', 'Python', 'Go', 'JavaScript', 'TypeScript',
-  'C#', 'C++', 'Ruby', 'Rust', 'PHP', 'Swift', 'Kotlin', 'Scala',
+  'Java', 'JavaScript', 'Angular', 'React', 'TypeScript', 'Node.js', 'Scala',
+  'Python', 'C#', '.NET', 'Go', 'C++ (GCC)', 'C (GCC)',
 ];
 
-const SOURCES = ['Outbound', 'LinkedIn', 'Referral', 'Inbound', 'Cold Call', 'Event', 'Partner'];
+const SOURCES = ['Outbound', 'LinkedIn', 'Referral', 'Inbound', 'Cold Call', 'Event', 'Partner', 'Email Campaign'];
+
+const AES = ['Daniel', 'Bruce', 'Jake', 'Arik', 'JVL'];
 
 // Left accent colour per stage
 const STAGE_HEX = {
@@ -18,19 +20,19 @@ const STAGE_HEX = {
 
 // Light pastel language badges
 const LANG_BADGE = {
-  Java:       'bg-orange-50 text-orange-700 border-orange-200',
-  Python:     'bg-sky-50    text-sky-700    border-sky-200',
-  Go:         'bg-cyan-50   text-cyan-700   border-cyan-200',
-  JavaScript: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  TypeScript: 'bg-blue-50   text-blue-700   border-blue-200',
-  'C#':       'bg-purple-50 text-purple-700 border-purple-200',
-  'C++':      'bg-indigo-50 text-indigo-700 border-indigo-200',
-  Ruby:       'bg-red-50    text-red-700    border-red-200',
-  Rust:       'bg-orange-50 text-orange-700 border-orange-200',
-  PHP:        'bg-violet-50 text-violet-700 border-violet-200',
-  Swift:      'bg-rose-50   text-rose-700   border-rose-200',
-  Kotlin:     'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
-  Scala:      'bg-red-50    text-red-700    border-red-200',
+  Java:         'bg-orange-50 text-orange-700 border-orange-200',
+  JavaScript:   'bg-yellow-50 text-yellow-700 border-yellow-200',
+  Angular:      'bg-red-50    text-red-700    border-red-200',
+  React:        'bg-cyan-50   text-cyan-700   border-cyan-200',
+  TypeScript:   'bg-blue-50   text-blue-700   border-blue-200',
+  'Node.js':    'bg-green-50  text-green-700  border-green-200',
+  Scala:        'bg-red-700 bg-opacity-10 text-red-700 border-red-200',
+  Python:       'bg-sky-50    text-sky-700    border-sky-200',
+  'C#':         'bg-purple-50 text-purple-700 border-purple-200',
+  '.NET':       'bg-indigo-50 text-indigo-700 border-indigo-200',
+  Go:           'bg-cyan-50   text-cyan-700   border-cyan-200',
+  'C++ (GCC)':  'bg-indigo-50 text-indigo-700 border-indigo-200',
+  'C (GCC)':    'bg-slate-50  text-slate-700  border-slate-200',
 };
 
 // Light pastel source badges
@@ -40,8 +42,9 @@ const SOURCE_BADGE = {
   Referral:    'bg-[#edf9f0] text-[#038048] border-[#b6e9ca]',
   Inbound:     'bg-[#fff3e0] text-[#b36200] border-[#ffd8a3]',
   'Cold Call': 'bg-[#fce8ff] text-[#8b00c9] border-[#e5b5fa]',
-  Event:       'bg-[#e8fdf8] text-[#007c70] border-[#a8eed8]',
-  Partner:     'bg-[#fef0e0] text-[#965200] border-[#f5cfa0]',
+  Event:          'bg-[#e8fdf8] text-[#007c70] border-[#a8eed8]',
+  Partner:        'bg-[#fef0e0] text-[#965200] border-[#f5cfa0]',
+  'Email Campaign': 'bg-[#f0e8fd] text-[#6b21a8] border-[#e9d5ff]',
 };
 
 export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, isGhost }) {
@@ -52,8 +55,10 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
 
   const [editingName, setEditingName] = useState(false);
   const [editingLink, setEditingLink] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
   const [localName, setLocalName]     = useState(opp.Opp_Name);
   const [localLink, setLocalLink]     = useState(opp.Link);
+  const [localNotes, setLocalNotes]   = useState(opp.Notes || '');
   const [showLangs, setShowLangs]     = useState(false);
   const langRef = useRef(null);
 
@@ -63,6 +68,7 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
 
   useEffect(() => { setLocalName(opp.Opp_Name); }, [opp.Opp_Name]);
   useEffect(() => { setLocalLink(opp.Link); },     [opp.Link]);
+  useEffect(() => { setLocalNotes(opp.Notes || ''); }, [opp.Notes]);
 
   useEffect(() => {
     if (!showLangs) return;
@@ -87,6 +93,11 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   const saveLink = () => {
     setEditingLink(false);
     if (localLink !== opp.Link) onUpdate(opp.Id, { Link: localLink.trim() });
+  };
+
+  const saveNotes = () => {
+    setEditingNotes(false);
+    if (localNotes !== (opp.Notes || '')) onUpdate(opp.Id, { Notes: localNotes.trim() });
   };
 
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
@@ -130,6 +141,20 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
             </svg>
           </div>
         )}
+
+        {/* ── BDR Name + AE (top row) ────────────────────────────── */}
+        <div className="flex gap-1.5 mb-1.5 text-xs">
+          {opp.BDR_Name && (
+            <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+              {opp.BDR_Name}
+            </span>
+          )}
+          {opp.AE_Name && (
+            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+              AE: {opp.AE_Name}
+            </span>
+          )}
+        </div>
 
         {/* ── Opp Name ───────────────────────────────────────────── */}
         {editingName ? (
@@ -248,43 +273,81 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
           )}
         </div>
 
-        {/* ── Pain + Source ──────────────────────────────────────── */}
-        <div className="flex items-center gap-2 pt-2.5 border-t border-gray-100">
-          {/* Pain toggle */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => onUpdate(opp.Id, { Pain_Validated: String(!painValidated) })}
-              className={`relative w-8 h-4 rounded-full transition-colors duration-200 ${painValidated ? 'bg-[#00c875]' : 'bg-gray-200'}`}
-              title={painValidated ? 'Pain validated' : 'Mark pain validated'}
-            >
-              <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform duration-200 ${painValidated ? 'translate-x-4' : 'translate-x-0.5'}`} />
-            </button>
-            <span className={`text-xs font-medium transition-colors ${painValidated ? 'text-[#007038]' : 'text-gray-400'}`}>
-              Pain
-            </span>
+        {/* ── Notes ──────────────────────────────────────────────── */}
+        {editingNotes ? (
+          <textarea
+            autoFocus
+            value={localNotes}
+            onChange={(e) => setLocalNotes(e.target.value)}
+            onBlur={saveNotes}
+            className="w-full text-xs text-gray-700 border border-gray-300 rounded-lg px-2 py-1 mb-2.5 focus:outline-none focus:border-[#0073ea] focus:ring-2 focus:ring-[#0073ea]/10 resize-none h-16"
+            placeholder="Add notes…"
+          />
+        ) : opp.Notes ? (
+          <div
+            onClick={() => setEditingNotes(true)}
+            className="text-xs text-gray-600 bg-gray-50 rounded-lg px-2 py-1.5 mb-2.5 border border-gray-100 cursor-text hover:border-gray-200 transition-colors whitespace-pre-wrap"
+          >
+            {opp.Notes}
+          </div>
+        ) : (
+          <button
+            onClick={() => setEditingNotes(true)}
+            className="w-full text-xs text-gray-300 hover:text-[#0073ea] text-left px-2 py-1.5 mb-2.5 transition-colors"
+          >
+            + Add notes
+          </button>
+        )}
+
+        {/* ── Pain + Source + AE ─────────────────────────────────── */}
+        <div className="pt-2.5 border-t border-gray-100 space-y-2">
+          <div className="flex items-center gap-2">
+            {/* Pain toggle */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => onUpdate(opp.Id, { Pain_Validated: String(!painValidated) })}
+                className={`relative w-8 h-4 rounded-full transition-colors duration-200 ${painValidated ? 'bg-[#00c875]' : 'bg-gray-200'}`}
+                title={painValidated ? 'Pain validated' : 'Mark pain validated'}
+              >
+                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform duration-200 ${painValidated ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              </button>
+              <span className={`text-xs font-medium transition-colors ${painValidated ? 'text-[#007038]' : 'text-gray-400'}`}>
+                Pain
+              </span>
+            </div>
+
+            {/* Source badge / dropdown */}
+            {opp.Source ? (
+              <select
+                value={opp.Source}
+                onChange={(e) => onUpdate(opp.Id, { Source: e.target.value })}
+                className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-lg border cursor-pointer focus:outline-none ${SOURCE_BADGE[opp.Source] || 'bg-gray-100 text-gray-600 border-gray-200'}`}
+                style={{ appearance: 'none' }}
+              >
+                <option value="">Source…</option>
+                {SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            ) : (
+              <select
+                value=""
+                onChange={(e) => onUpdate(opp.Id, { Source: e.target.value })}
+                className="ml-auto text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2 py-0.5 cursor-pointer focus:outline-none hover:border-gray-300"
+              >
+                <option value="">Source…</option>
+                {SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
           </div>
 
-          {/* Source badge / dropdown */}
-          {opp.Source ? (
-            <select
-              value={opp.Source}
-              onChange={(e) => onUpdate(opp.Id, { Source: e.target.value })}
-              className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-lg border cursor-pointer focus:outline-none ${SOURCE_BADGE[opp.Source] || 'bg-gray-100 text-gray-600 border-gray-200'}`}
-              style={{ appearance: 'none' }}
-            >
-              <option value="">Source…</option>
-              {SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          ) : (
-            <select
-              value=""
-              onChange={(e) => onUpdate(opp.Id, { Source: e.target.value })}
-              className="ml-auto text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2 py-0.5 cursor-pointer focus:outline-none hover:border-gray-300"
-            >
-              <option value="">Source…</option>
-              {SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          )}
+          {/* AE dropdown */}
+          <select
+            value={opp.AE_Name || ''}
+            onChange={(e) => onUpdate(opp.Id, { AE_Name: e.target.value })}
+            className="w-full text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 cursor-pointer focus:outline-none hover:border-gray-300 focus:border-[#0073ea]"
+          >
+            <option value="">Assign AE…</option>
+            {AES.map((ae) => <option key={ae} value={ae}>{ae}</option>)}
+          </select>
         </div>
 
         {/* ── Footer: date + delete ──────────────────────────────── */}

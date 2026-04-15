@@ -11,7 +11,7 @@ const PORT    = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
 const CSV_PATH = process.env.CSV_PATH || path.join(__dirname, 'pipeline_master.csv');
 
-const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','Last_Updated'];
+const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Last_Updated'];
 
 app.set('trust proxy', 1);
 
@@ -36,8 +36,13 @@ function writeCSV(records) {
 
 // ── API routes ───────────────────────────────────────────────────────────────
 
-app.get('/api/opportunities', (_req, res) => {
-  res.json(readCSV());
+app.get('/api/opportunities', (req, res) => {
+  let opps = readCSV();
+  const bdrFilter = req.query.bdr;
+  if (bdrFilter) {
+    opps = opps.filter((o) => o.BDR_Name === bdrFilter);
+  }
+  res.json(opps);
 });
 
 app.post('/api/opportunities', (req, res) => {
@@ -51,6 +56,9 @@ app.post('/api/opportunities', (req, res) => {
     Pain_Validated: String(req.body.Pain_Validated ?? 'false'),
     Source:        req.body.Source        || '',
     Link:          req.body.Link          || '',
+    BDR_Name:      req.body.BDR_Name      || '',
+    AE_Name:       req.body.AE_Name       || '',
+    Notes:         req.body.Notes         || '',
     Last_Updated:  new Date().toISOString(),
   };
   records.push(opp);
