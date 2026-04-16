@@ -12,6 +12,13 @@ export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDragg
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const t = STAGE_THEME[stage.id];
 
+  // Sort opportunities by Meeting_Date (ascending, nulls at bottom)
+  const sortedOpps = [...opps].sort((a, b) => {
+    const dateA = a.Meeting_Date ? new Date(a.Meeting_Date) : new Date('9999-12-31');
+    const dateB = b.Meeting_Date ? new Date(b.Meeting_Date) : new Date('9999-12-31');
+    return dateA - dateB;
+  });
+
   return (
     <div className="flex flex-col w-72 flex-shrink-0">
 
@@ -43,7 +50,7 @@ export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDragg
         style={{ borderColor: isOver ? t.hex : undefined }}
       >
         <div className="flex flex-col gap-2">
-          {opps.map((opp) => (
+          {sortedOpps.map((opp) => (
             <OpportunityCard
               key={opp.Id}
               opp={opp}

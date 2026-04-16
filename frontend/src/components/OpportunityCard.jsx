@@ -56,9 +56,13 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   const [editingName, setEditingName] = useState(false);
   const [editingLink, setEditingLink] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [editingNextStep, setEditingNextStep] = useState(false);
   const [localName, setLocalName]     = useState(opp.Opp_Name);
   const [localLink, setLocalLink]     = useState(opp.Link);
   const [localNotes, setLocalNotes]   = useState(opp.Notes || '');
+  const [localEmail, setLocalEmail]   = useState(opp.Email || '');
+  const [localNextStep, setLocalNextStep] = useState(opp.Next_Step || '');
   const [showLangs, setShowLangs]     = useState(false);
   const langRef = useRef(null);
 
@@ -69,6 +73,8 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   useEffect(() => { setLocalName(opp.Opp_Name); }, [opp.Opp_Name]);
   useEffect(() => { setLocalLink(opp.Link); },     [opp.Link]);
   useEffect(() => { setLocalNotes(opp.Notes || ''); }, [opp.Notes]);
+  useEffect(() => { setLocalEmail(opp.Email || ''); }, [opp.Email]);
+  useEffect(() => { setLocalNextStep(opp.Next_Step || ''); }, [opp.Next_Step]);
 
   useEffect(() => {
     if (!showLangs) return;
@@ -98,6 +104,16 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   const saveNotes = () => {
     setEditingNotes(false);
     if (localNotes !== (opp.Notes || '')) onUpdate(opp.Id, { Notes: localNotes.trim() });
+  };
+
+  const saveEmail = () => {
+    setEditingEmail(false);
+    if (localEmail !== (opp.Email || '')) onUpdate(opp.Id, { Email: localEmail.trim() });
+  };
+
+  const saveNextStep = () => {
+    setEditingNextStep(false);
+    if (localNextStep !== (opp.Next_Step || '')) onUpdate(opp.Id, { Next_Step: localNextStep.trim() });
   };
 
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
@@ -145,9 +161,15 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
         {/* ── BDR Name + AE (top row) ────────────────────────────── */}
         <div className="flex gap-1.5 mb-1.5 text-xs">
           {opp.BDR_Name && (
-            <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+              <img
+                src={`/bdr-images/${opp.BDR_Name.toLowerCase()}.jpg`}
+                alt={opp.BDR_Name}
+                className="w-5 h-5 rounded-full object-cover border border-blue-200"
+                onError={(e) => e.target.style.display = 'none'}
+              />
               {opp.BDR_Name}
-            </span>
+            </div>
           )}
           {opp.AE_Name && (
             <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
@@ -296,6 +318,60 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
             className="w-full text-xs text-gray-300 hover:text-[#0073ea] text-left px-2 py-1.5 mb-2.5 transition-colors"
           >
             + Add notes
+          </button>
+        )}
+
+        {/* ── Email ──────────────────────────────────────────────── */}
+        {editingEmail ? (
+          <input
+            autoFocus
+            type="email"
+            placeholder="email@example.com"
+            value={localEmail}
+            onChange={(e) => setLocalEmail(e.target.value)}
+            onBlur={saveEmail}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+            className="w-full text-xs border border-gray-300 rounded-lg px-2 py-0.5 text-gray-700 focus:outline-none focus:border-[#0073ea] mb-2.5"
+          />
+        ) : opp.Email ? (
+          <div
+            onClick={() => setEditingEmail(true)}
+            className="text-xs text-[#0073ea] bg-blue-50 rounded-lg px-2 py-1.5 mb-2.5 border border-blue-100 cursor-text hover:border-blue-200 transition-colors truncate"
+          >
+            {opp.Email}
+          </div>
+        ) : (
+          <button
+            onClick={() => setEditingEmail(true)}
+            className="w-full text-xs text-gray-300 hover:text-[#0073ea] text-left px-2 py-1.5 mb-2.5 transition-colors"
+          >
+            + Add email
+          </button>
+        )}
+
+        {/* ── Next Step ──────────────────────────────────────────── */}
+        {editingNextStep ? (
+          <textarea
+            autoFocus
+            value={localNextStep}
+            onChange={(e) => setLocalNextStep(e.target.value)}
+            onBlur={saveNextStep}
+            className="w-full text-xs text-gray-700 border border-gray-300 rounded-lg px-2 py-1 mb-2.5 focus:outline-none focus:border-[#0073ea] focus:ring-2 focus:ring-[#0073ea]/10 resize-none h-16"
+            placeholder="Next steps…"
+          />
+        ) : opp.Next_Step ? (
+          <div
+            onClick={() => setEditingNextStep(true)}
+            className="text-xs text-gray-600 bg-gray-50 rounded-lg px-2 py-1.5 mb-2.5 border border-gray-100 cursor-text hover:border-gray-200 transition-colors whitespace-pre-wrap"
+          >
+            {opp.Next_Step}
+          </div>
+        ) : (
+          <button
+            onClick={() => setEditingNextStep(true)}
+            className="w-full text-xs text-gray-300 hover:text-[#0073ea] text-left px-2 py-1.5 mb-2.5 transition-colors"
+          >
+            + Add next steps
           </button>
         )}
 

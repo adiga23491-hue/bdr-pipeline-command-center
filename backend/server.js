@@ -11,7 +11,7 @@ const PORT    = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
 const CSV_PATH = process.env.CSV_PATH || path.join(__dirname, 'pipeline_master.csv');
 
-const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Last_Updated'];
+const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Last_Updated'];
 
 app.set('trust proxy', 1);
 
@@ -59,6 +59,8 @@ app.post('/api/opportunities', (req, res) => {
     BDR_Name:      req.body.BDR_Name      || '',
     AE_Name:       req.body.AE_Name       || '',
     Notes:         req.body.Notes         || '',
+    Email:         req.body.Email         || '',
+    Next_Step:     req.body.Next_Step     || '',
     Last_Updated:  new Date().toISOString(),
   };
   records.push(opp);

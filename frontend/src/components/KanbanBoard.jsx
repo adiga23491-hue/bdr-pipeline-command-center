@@ -107,8 +107,14 @@ export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBD
                 <button
                   key={name}
                   onClick={() => handleBDRSelect(name)}
-                  className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-[#0073ea] hover:text-white rounded-lg transition-colors text-left"
+                  className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-[#0073ea] hover:text-white rounded-lg transition-colors text-left flex items-center gap-3"
                 >
+                  <img
+                    src={`/bdr-images/${name.toLowerCase()}.jpg`}
+                    alt={name}
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0 border border-gray-300"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
                   {name}
                 </button>
               ))}
