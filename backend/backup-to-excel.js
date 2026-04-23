@@ -22,7 +22,18 @@ function backupToExcel() {
     }
 
     const content = fs.readFileSync(CSV_PATH, 'utf8');
-    const records = parse(content, { columns: true, skip_empty_lines: true });
+    const allRecords = parse(content, { columns: true, skip_empty_lines: true });
+
+    // Filter out Id and Last_Updated columns for cleaner export
+    const records = allRecords.map(row => {
+      const filtered = {};
+      Object.keys(row).forEach(key => {
+        if (key !== 'Id' && key !== 'Last_Updated') {
+          filtered[key] = row[key];
+        }
+      });
+      return filtered;
+    });
 
     // Create workbook
     const ws = XLSX.utils.json_to_sheet(records);
@@ -42,10 +53,10 @@ function backupToExcel() {
       }
     }
 
-    // Set column widths
+    // Set column widths (14 columns without Id and Last_Updated)
     const colWidths = {
-      'A': 37, 'B': 40, 'C': 18, 'D': 15, 'E': 25, 'F': 15,
-      'G': 18, 'H': 25, 'I': 12, 'J': 12, 'K': 30, 'L': 20, 'M': 20, 'N': 25
+      'A': 40, 'B': 18, 'C': 15, 'D': 25, 'E': 15, 'F': 18,
+      'G': 25, 'H': 12, 'I': 12, 'J': 30, 'K': 20, 'L': 20, 'M': 18, 'N': 30
     };
     ws['!cols'] = Object.values(colWidths).map(w => ({ wch: w }));
 

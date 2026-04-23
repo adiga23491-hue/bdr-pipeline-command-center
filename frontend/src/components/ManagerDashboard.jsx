@@ -22,6 +22,11 @@ const STAGE_TOKEN = {
     dot: 'bg-[#00c875]', bar: 'bg-[#00c875]', headerBg: '#edfdf5',
     hex: '#00c875', light: '#edfdf5',
   },
+  Rejected: {
+    bg: 'bg-[#fef2f2]', text: 'text-[#991b1b]', border: 'border-[#fecaca]',
+    dot: 'bg-[#dc2626]', bar: 'bg-[#dc2626]', headerBg: '#fef2f2',
+    hex: '#dc2626', light: '#fef2f2',
+  },
 };
 
 const SOURCE_COLOR = {
@@ -34,7 +39,7 @@ const SOURCE_COLOR = {
   Partner: 'bg-[#fef0e0] text-[#965200] border border-[#f5cfa0]',
 };
 
-const STAGES = ['Meeting Not Accepted', 'S0', 'S0 Occurred', 'S1'];
+const STAGES = ['Meeting Not Accepted', 'S0', 'S0 Occurred', 'S1', 'Rejected'];
 
 const COL_HEADERS = [
   { key: 'Opp_Name',      label: 'Opportunity',    w: 'w-52' },
@@ -43,6 +48,7 @@ const COL_HEADERS = [
   { key: 'Languages',     label: 'Languages',       w: 'w-44' },
   { key: 'Pain_Validated',label: 'Pain Validated',  w: 'w-28' },
   { key: 'Source',        label: 'Source',          w: 'w-28' },
+  { key: 'Email',         label: 'Email',           w: 'w-48' },
   { key: 'BDR_Name',      label: 'BDR',             w: 'w-28' },
   { key: 'AE_Name',       label: 'AE',              w: 'w-28' },
   { key: 'Last_Updated',  label: 'Last Updated',    w: 'w-36' },
@@ -115,25 +121,34 @@ export default function ManagerDashboard({ opps, currentBDR }) {
   const [sortDir, setSortDir]     = useState('desc');
   const [search, setSearch]       = useState('');
   const [stageFilter, setStageFilter] = useState('All');
+  const [showRejected, setShowRejected] = useState(false);
 
-  const painCount  = filteredOpps.filter((o) => o.Pain_Validated === 'true').length;
-  const painPct    = filteredOpps.length ? Math.round((painCount / filteredOpps.length) * 100) : 0;
+  // Separate rejected from active pipeline
+  const activeOpps = filteredOpps.filter((o) => o.Meeting_Rejected !== 'true');
+  const rejectedOpps = filteredOpps.filter((o) => o.Meeting_Rejected === 'true');
+  const displayOpps = showRejected ? rejectedOpps : activeOpps;
+
+  const painCount  = activeOpps.filter((o) => o.Pain_Validated === 'true').length;
+  const painPct    = activeOpps.length ? Math.round((painCount / activeOpps.length) * 100) : 0;
+  const rejectionCount = rejectedOpps.length;
+  const rejectionRate = filteredOpps.length ? Math.round((rejectionCount / filteredOpps.length) * 100) : 0;
 
   const sourceBreakdown = useMemo(() =>
-    filteredOpps.reduce((acc, o) => {
+    activeOpps.reduce((acc, o) => {
       if (o.Source) acc[o.Source] = (acc[o.Source] || 0) + 1;
       return acc;
     }, {}),
-  [filteredOpps]);
+  [activeOpps]);
 
   const topLangs = useMemo(() => {
-    const map = filteredOpps
+    const map = activeOpps
       .flatMap((o) => (o.Languages ? o.Languages.split(',').filter(Boolean) : []))
       .reduce((acc, l) => { acc[l] = (acc[l] || 0) + 1; return acc; }, {});
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  }, [filteredOpps]);
+  }, [activeOpps]);
 
-  const maxStageCount = Math.max(...STAGES.map((s) => filteredOpps.filter((o) => o.Stage === s).length), 1);
+  const pipelineStages = ['Meeting Not Accepted', 'S0', 'S0 Occurred', 'S1'];
+  const maxStageCount = Math.max(...pipelineStages.map((s) => activeOpps.filter((o) => o.Stage === s).length), 1);
 
   const toggleSort = (field) => {
     if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -141,20 +156,21 @@ export default function ManagerDashboard({ opps, currentBDR }) {
   };
 
   const rows = useMemo(() =>
-    [...filteredOpps]
+    [...displayOpps]
       .filter((o) => {
         const q = search.toLowerCase();
-        return (
-          (o.Opp_Name?.toLowerCase().includes(q) || o.Source?.toLowerCase().includes(q)) &&
-          (stageFilter === 'All' || o.Stage === stageFilter)
-        );
+        const matchesSearch = o.Opp_Name?.toLowerCase().includes(q) || o.Source?.toLowerCase().includes(q) || o.Email?.toLowerCase().includes(q);
+
+        if (stageFilter === 'All') return matchesSearch;
+        if (stageFilter === 'Rejected') return matchesSearch && o.Meeting_Rejected === 'true';
+        return matchesSearch && o.Stage === stageFilter;
       })
       .sort((a, b) => {
         const va = (a[sortField] || '').toString();
         const vb = (b[sortField] || '').toString();
         return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
       }),
-  [filteredOpps, search, stageFilter, sortField, sortDir]);
+  [displayOpps, search, stageFilter, sortField, sortDir]);
 
   return (
     <div className="-mx-6 -my-6 bg-[#f5f6f8] min-h-screen">
@@ -163,13 +179,40 @@ export default function ManagerDashboard({ opps, currentBDR }) {
         <div>
           <h2 className="text-lg font-bold text-gray-800 leading-none">Pipeline Overview</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            {currentBDR ? `${filteredOpps.length} opportunities for ${currentBDR}` : `${filteredOpps.length} active opportunities`}
+            {showRejected
+              ? `${rejectionCount} rejected opportunities${currentBDR ? ` for ${currentBDR}` : ''}`
+              : currentBDR ? `${activeOpps.length} active opportunities for ${currentBDR}` : `${activeOpps.length} active opportunities`}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-3">
+          {/* View toggle */}
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => { setShowRejected(false); setStageFilter('All'); }}
+              className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                !showRejected
+                  ? 'bg-white text-[#0073ea] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Active Pipeline
+            </button>
+            <button
+              onClick={() => { setShowRejected(true); setStageFilter('Rejected'); }}
+              className={`px-3 py-1 rounded text-xs font-medium transition-all flex items-center gap-1.5 ${
+                showRejected
+                  ? 'bg-white text-[#dc2626] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626]" />
+              Rejected {rejectionCount > 0 ? `(${rejectionCount})` : ''}
+            </button>
+          </div>
+
           {/* Stage filter chips */}
           <div className="hidden lg:flex items-center gap-1.5">
-            {['All', ...STAGES].map((s) => (
+            {(showRejected ? ['Rejected'] : ['All', ...pipelineStages]).map((s) => (
               <button
                 key={s}
                 onClick={() => setStageFilter(s)}
@@ -201,18 +244,43 @@ export default function ManagerDashboard({ opps, currentBDR }) {
 
       <div className="px-8 py-6 space-y-6">
         {/* ── Stage stat cards ─────────────────────────────────────── */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          {STAGES.map((stage) => (
-            <StatCard
-              key={stage}
-              stage={stage}
-              count={filteredOpps.filter((o) => o.Stage === stage).length}
-              total={filteredOpps.length}
-            />
-          ))}
-        </div>
+        {!showRejected ? (
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            {pipelineStages.map((stage) => (
+              <StatCard
+                key={stage}
+                stage={stage}
+                count={activeOpps.filter((o) => o.Stage === stage).length}
+                total={activeOpps.length}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-shadow col-span-2 xl:col-span-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Rejected</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626]" />
+              </div>
+              <div className="flex items-end gap-2">
+                <span className="text-4xl font-bold text-gray-800 leading-none">{rejectionCount}</span>
+                <span className="text-sm text-gray-400 mb-1">opps</span>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Of total pipeline</span>
+                  <span className="font-medium">{rejectionRate}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-[#dc2626] transition-all" style={{ width: `${rejectionRate}%` }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Insight row ──────────────────────────────────────────── */}
+        {!showRejected && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Pipeline funnel */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:col-span-1">
@@ -223,11 +291,11 @@ export default function ManagerDashboard({ opps, currentBDR }) {
               Pipeline Funnel
             </h3>
             <div className="space-y-2.5">
-              {STAGES.map((stage) => (
+              {pipelineStages.map((stage) => (
                 <FunnelBar
                   key={stage}
                   stage={stage}
-                  count={opps.filter((o) => o.Stage === stage).length}
+                  count={activeOpps.filter((o) => o.Stage === stage).length}
                   max={maxStageCount}
                 />
               ))}
@@ -263,7 +331,7 @@ export default function ManagerDashboard({ opps, currentBDR }) {
             </div>
             <div className="text-center">
               <span className="text-sm font-semibold text-[#007038]">{painCount}</span>
-              <span className="text-sm text-gray-400"> of {opps.length} opps</span>
+              <span className="text-sm text-gray-400"> of {activeOpps.length} opps</span>
             </div>
           </div>
 
@@ -286,7 +354,7 @@ export default function ManagerDashboard({ opps, currentBDR }) {
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#0073ea] rounded-full"
-                          style={{ width: `${(cnt / opps.length) * 100}%` }}
+                          style={{ width: `${(cnt / activeOpps.length) * 100}%` }}
                         />
                       </div>
                       <span className="text-xs font-semibold text-gray-600 w-4 text-right">{cnt}</span>
@@ -310,6 +378,7 @@ export default function ManagerDashboard({ opps, currentBDR }) {
             )}
           </div>
         </div>
+        )}
 
         {/* ── Table ──────────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -445,6 +514,38 @@ export default function ManagerDashboard({ opps, currentBDR }) {
                       )}
                     </td>
 
+                    {/* Email */}
+                    <td className="px-5 py-3">
+                      {opp.Email ? (
+                        <a
+                          href={`mailto:${opp.Email}`}
+                          className="text-xs text-[#0073ea] hover:text-[#0060c0] hover:underline break-all"
+                        >
+                          {opp.Email}
+                        </a>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
+                    </td>
+
+                    {/* BDR Name */}
+                    <td className="px-5 py-3">
+                      {opp.BDR_Name ? (
+                        <span className="text-xs font-medium text-gray-700">{opp.BDR_Name}</span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
+                    </td>
+
+                    {/* AE Name */}
+                    <td className="px-5 py-3">
+                      {opp.AE_Name ? (
+                        <span className="text-xs font-medium text-gray-700">{opp.AE_Name}</span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
+                    </td>
+
                     {/* Last Updated */}
                     <td className="px-5 py-3 text-xs text-gray-400">
                       {opp.Last_Updated
@@ -459,7 +560,7 @@ export default function ManagerDashboard({ opps, currentBDR }) {
 
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-16 text-center">
+                    <td colSpan={10} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-400">
                         <svg className="w-8 h-8 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

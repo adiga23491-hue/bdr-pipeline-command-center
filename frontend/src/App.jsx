@@ -20,6 +20,9 @@ export default function App() {
   const [toast, setToast]             = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [pendingAddition, setPendingAddition] = useState(null);
 
   const notify = useCallback((msg, type = 'success') => {
     setToast({ msg, type });
@@ -36,19 +39,35 @@ export default function App() {
   }, [notify, currentBDR]);
 
   // ── CRUD ───────────────────────────────────────────────────────────────────
-  const addOpp = useCallback(async (stage, bdrName) => {
+  const handleAddClick = (stage, bdrName) => {
+    setPendingAddition({ stage, bdrName });
+    setShowEmailModal(true);
+    setEmailInput('');
+  };
+
+  const completeAddOpp = useCallback(async (stage, bdrName, email) => {
     const tempId = `temp-${Date.now()}`;
-    const draft = { Id: tempId, Opp_Name: 'New Opportunity', Stage: stage, Meeting_Date: '', Languages: '', Pain_Validated: 'false', Source: '', Link: '', BDR_Name: bdrName || '', AE_Name: '', Notes: '', Last_Updated: new Date().toISOString() };
+    const draft = { Id: tempId, Opp_Name: 'New Opportunity', Stage: stage, Meeting_Date: '', Languages: '', Pain_Validated: 'false', Source: '', Link: '', BDR_Name: bdrName || '', AE_Name: '', Notes: '', Email: email.trim(), Next_Step: '', Meeting_Rejected: 'false', Rejection_Reason: '', Last_Updated: new Date().toISOString() };
     setOpps((prev) => [draft, ...prev]);
     try {
       const res  = await fetch('/api/opportunities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
-      const saved = await res.json();
-      setOpps((prev) => prev.map((o) => (o.Id === tempId ? saved : o)));
+      const data = await res.json();
+      if (!res.ok) {
+        notify(data.error || 'Failed to create opportunity', 'error');
+        setOpps((prev) => prev.filter((o) => o.Id !== tempId));
+        return;
+      }
+      setOpps((prev) => prev.map((o) => (o.Id === tempId ? data : o)));
+      notify('Opportunity created', 'success');
     } catch {
       setOpps((prev) => prev.filter((o) => o.Id !== tempId));
       notify('Failed to create opportunity', 'error');
     }
   }, [notify]);
+
+  const addOpp = useCallback((stage, bdrName) => {
+    handleAddClick(stage, bdrName);
+  }, []);
 
   const updateOpp = useCallback(async (id, updates) => {
     setOpps((prev) => prev.map((o) => o.Id === id ? { ...o, ...updates, Last_Updated: new Date().toISOString() } : o));
@@ -155,6 +174,59 @@ export default function App() {
           <KanbanBoard opps={opps} onAdd={addOpp} onUpdate={updateOpp} onDelete={deleteOpp} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
         )}
       </main>
+
+      {/* ── Email Modal ─────────────────────────────────────────────────── */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-80">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Contact Email Required</h2>
+            <p className="text-sm text-gray-600 mb-6">Please enter the contact email for this opportunity:</p>
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && emailInput.trim()) {
+                  if (pendingAddition) {
+                    completeAddOpp(pendingAddition.stage, pendingAddition.bdrName, emailInput);
+                    setShowEmailModal(false);
+                    setPendingAddition(null);
+                  }
+                }
+              }}
+              placeholder="contact@example.com"
+              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0073ea] mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (emailInput.trim() && pendingAddition) {
+                    completeAddOpp(pendingAddition.stage, pendingAddition.bdrName, emailInput);
+                    setShowEmailModal(false);
+                    setPendingAddition(null);
+                  } else {
+                    notify('Please enter an email address', 'error');
+                  }
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#0073ea] hover:bg-[#0063d0] rounded-lg transition-colors"
+              >
+                Create Opportunity
+              </button>
+              <button
+                onClick={() => {
+                  setShowEmailModal(false);
+                  setPendingAddition(null);
+                  setEmailInput('');
+                }}
+                className="flex-1 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors border border-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Password Modal ──────────────────────────────────────────────── */}
       {showPasswordModal && (

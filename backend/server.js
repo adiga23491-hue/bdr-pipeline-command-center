@@ -11,7 +11,7 @@ const PORT    = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
 const CSV_PATH = process.env.CSV_PATH || path.join(__dirname, 'pipeline_master.csv');
 
-const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Last_Updated'];
+const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Meeting_Rejected','Rejection_Reason','Last_Updated'];
 
 app.set('trust proxy', 1);
 
@@ -46,22 +46,29 @@ app.get('/api/opportunities', (req, res) => {
 });
 
 app.post('/api/opportunities', (req, res) => {
+  // Email is required
+  if (!req.body.Email || !req.body.Email.trim()) {
+    return res.status(400).json({ error: 'Email is required to create an opportunity' });
+  }
+
   const records = readCSV();
   const opp = {
     Id: uuidv4(),
-    Opp_Name:      req.body.Opp_Name      || 'New Opportunity',
-    Stage:         req.body.Stage         || 'Meeting Not Accepted',
-    Meeting_Date:  req.body.Meeting_Date  || '',
-    Languages:     req.body.Languages     || '',
-    Pain_Validated: String(req.body.Pain_Validated ?? 'false'),
-    Source:        req.body.Source        || '',
-    Link:          req.body.Link          || '',
-    BDR_Name:      req.body.BDR_Name      || '',
-    AE_Name:       req.body.AE_Name       || '',
-    Notes:         req.body.Notes         || '',
-    Email:         req.body.Email         || '',
-    Next_Step:     req.body.Next_Step     || '',
-    Last_Updated:  new Date().toISOString(),
+    Opp_Name:         req.body.Opp_Name         || 'New Opportunity',
+    Stage:            req.body.Stage            || 'Meeting Not Accepted',
+    Meeting_Date:     req.body.Meeting_Date     || '',
+    Languages:        req.body.Languages        || '',
+    Pain_Validated:   String(req.body.Pain_Validated ?? 'false'),
+    Source:           req.body.Source           || '',
+    Link:             req.body.Link             || '',
+    BDR_Name:         req.body.BDR_Name         || '',
+    AE_Name:          req.body.AE_Name          || '',
+    Notes:            req.body.Notes            || '',
+    Email:            req.body.Email.trim(),
+    Next_Step:        req.body.Next_Step        || '',
+    Meeting_Rejected: String(req.body.Meeting_Rejected ?? 'false'),
+    Rejection_Reason: req.body.Rejection_Reason || '',
+    Last_Updated:     new Date().toISOString(),
   };
   records.push(opp);
   writeCSV(records);

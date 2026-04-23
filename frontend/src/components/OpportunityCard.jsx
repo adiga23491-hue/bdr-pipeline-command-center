@@ -2,7 +2,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 const LANGUAGES = [
-  'Java', 'JavaScript', 'Angular', 'React', 'TypeScript', 'Node.js', 'Scala',
+  'Java', 'JavaScript', 'Angular', 'React', 'TypeScript', 'Node.js', 'Kotlin',
   'Python', 'C#', '.NET', 'Go', 'C++ (GCC)', 'C (GCC)',
 ];
 
@@ -26,7 +26,7 @@ const LANG_BADGE = {
   React:        'bg-cyan-50   text-cyan-700   border-cyan-200',
   TypeScript:   'bg-blue-50   text-blue-700   border-blue-200',
   'Node.js':    'bg-green-50  text-green-700  border-green-200',
-  Scala:        'bg-red-700 bg-opacity-10 text-red-700 border-red-200',
+  Kotlin:       'bg-violet-50  text-violet-700  border-violet-200',
   Python:       'bg-sky-50    text-sky-700    border-sky-200',
   'C#':         'bg-purple-50 text-purple-700 border-purple-200',
   '.NET':       'bg-indigo-50 text-indigo-700 border-indigo-200',
@@ -58,11 +58,13 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   const [editingNotes, setEditingNotes] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingNextStep, setEditingNextStep] = useState(false);
+  const [editingRejection, setEditingRejection] = useState(false);
   const [localName, setLocalName]     = useState(opp.Opp_Name);
   const [localLink, setLocalLink]     = useState(opp.Link);
   const [localNotes, setLocalNotes]   = useState(opp.Notes || '');
   const [localEmail, setLocalEmail]   = useState(opp.Email || '');
   const [localNextStep, setLocalNextStep] = useState(opp.Next_Step || '');
+  const [localRejection, setLocalRejection] = useState(opp.Rejection_Reason || '');
   const [showLangs, setShowLangs]     = useState(false);
   const langRef = useRef(null);
 
@@ -75,6 +77,7 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   useEffect(() => { setLocalNotes(opp.Notes || ''); }, [opp.Notes]);
   useEffect(() => { setLocalEmail(opp.Email || ''); }, [opp.Email]);
   useEffect(() => { setLocalNextStep(opp.Next_Step || ''); }, [opp.Next_Step]);
+  useEffect(() => { setLocalRejection(opp.Rejection_Reason || ''); }, [opp.Rejection_Reason]);
 
   useEffect(() => {
     if (!showLangs) return;
@@ -114,6 +117,22 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   const saveNextStep = () => {
     setEditingNextStep(false);
     if (localNextStep !== (opp.Next_Step || '')) onUpdate(opp.Id, { Next_Step: localNextStep.trim() });
+  };
+
+  const saveRejection = () => {
+    setEditingRejection(false);
+    if (localRejection !== (opp.Rejection_Reason || '')) {
+      onUpdate(opp.Id, { Meeting_Rejected: 'true', Rejection_Reason: localRejection.trim() });
+    }
+  };
+
+  const toggleRejection = () => {
+    if (opp.Meeting_Rejected === 'true') {
+      onUpdate(opp.Id, { Meeting_Rejected: 'false', Rejection_Reason: '' });
+      setLocalRejection('');
+    } else {
+      setEditingRejection(true);
+    }
   };
 
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
@@ -435,6 +454,43 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
               <option value="">Assign BDR…</option>
               {bdrNames.map((bdr) => <option key={bdr} value={bdr}>{bdr}</option>)}
             </select>
+          )}
+
+          {/* ── Rejection Toggle ─────────────────────────────────── */}
+          {editingRejection ? (
+            <textarea
+              autoFocus
+              value={localRejection}
+              onChange={(e) => setLocalRejection(e.target.value)}
+              onBlur={saveRejection}
+              className="w-full text-xs text-gray-700 border border-red-300 rounded-lg px-2 py-1 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 resize-none h-14"
+              placeholder="Why was meeting rejected?"
+            />
+          ) : opp.Meeting_Rejected === 'true' ? (
+            <div className="bg-red-50 rounded-lg px-2 py-1.5 border border-red-100">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={toggleRejection}
+                  className="relative w-5 h-5 rounded-md bg-red-200 flex items-center justify-center flex-shrink-0 hover:bg-red-300 transition-colors"
+                  title="Mark as not rejected"
+                >
+                  <svg className="w-3 h-3 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <div className="flex-1 cursor-text" onClick={() => setEditingRejection(true)}>
+                  <p className="text-xs font-semibold text-red-700">Rejected</p>
+                  <p className="text-xs text-red-600 whitespace-pre-wrap">{opp.Rejection_Reason || 'No reason provided'}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={toggleRejection}
+              className="w-full text-xs text-gray-300 hover:text-red-500 text-left px-2 py-1.5 transition-colors"
+            >
+              + Mark as Rejected
+            </button>
           )}
         </div>
 

@@ -25,7 +25,11 @@
       "Bash(railway --version)",
       "Bash(railway login:*)",
       "Read(//tmp/**)",
-      "Read(//Users/eyalyadin/.railway/**)"
+      "Read(//Users/eyalyadin/.railway/**)",
+      "Bash(find \"/users/eyalyadin/desktop/BDR app\" -type f -exec file {} \\\\;)",
+      "Bash(cp \"/users/eyalyadin/desktop/BDR app/Eyal.jpeg\" \"/Users/eyalyadin/Desktop/BDR Playbook/bdr-playbook-main/frontend/public/bdr-images/eyal.jpg\")",
+      "Bash(cp \"/users/eyalyadin/desktop/BDR app/Simon.jpeg\" \"/Users/eyalyadin/Desktop/BDR Playbook/bdr-playbook-main/frontend/public/bdr-images/simon.jpg\")",
+      "Bash(cp \"/users/eyalyadin/desktop/BDR app/steven.jpeg\" \"/Users/eyalyadin/Desktop/BDR Playbook/bdr-playbook-main/frontend/public/bdr-images/steven.jpg\")"
     ]
   }
 }
