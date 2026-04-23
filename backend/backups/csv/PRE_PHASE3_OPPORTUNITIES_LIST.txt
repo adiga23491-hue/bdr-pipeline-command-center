@@ -1,0 +1,36 @@
+📊 COMPLETE OPPORTUNITY LIST - PRE-PHASE 3
+==========================================
+
+All 28 opportunities that existed before Phase 3 deployment:
+
+
+| # | Company Name | Stage | BDR | AE | Email | Meeting Date | Languages | Source |
+|---|---|---|---|---|---|---|---|---|
+| 1 | S&P Global | S0 Occurred | Steven | Bruce |  | 2026-04-15 | Java | Event |
+| 2 | S&P Global | S1 |  |  |  | 2026-04-10 | Java;Python | Event |
+| 3 | Costar Group | S1 | Steven | Daniel |  | 2026-04-13 | Python | Referral |
+| 4 | Fifth Third Bank - Daniel | S0 Occurred | Steven | Daniel |  | 2026-04-07 | Java | Event |
+| 5 | Charter Communication - Bruce | S0 Occurred | Steven | Bruce |  | 2026-04-10 |  | Event |
+| 6 | Tyler Technologies | S0 | Steven | Jake |  | 2026-04-16 |  | Cold Call |
+| 7 | Commscope - Arik - Closed Lost | S0 |  |  |  | 2026-04-20 |  | Cold Call |
+| 8 | Uber - Bruce - Closed lost | S0 | Steven | Bruce |  | 2026-04-20 |  | Cold Call |
+| 9 | Zurich North America | Meeting Not Accepted | Steven | JVL |  |  |  |  |
+| 10 | Ahold - USA - From last month - Bruce | S0 Occurred | Steven | Bruce |  | 2026-03-31 |  |  |
+| 11 | UK Post office - JVL | S1 | Simon | JVL |  | 2026-04-09 |  | Cold Call |
+| 12 | Macro helix - Bruce - Closed Lost | S1 | Simon | Bruce |  | 2026-04-13 |  |  |
+| 13 | HBO - Daniel | S1 | Steven | Daniel |  | 2026-04-09 |  | Outbound |
+| 14 | Anthem - Closed Lost - Bruce | S0 Occurred | Simon | Bruce |  | 2026-04-14 | Java;Python | Partner |
+| 15 | Telefonica - JVL | S0 | Simon | JVL |  | 2026-04-28 |  | Outbound |
+| 16 | Inspired entertainments - NTA | Meeting Not Accepted | Simon | Jake |  | 2026-04-16 |  | Cold Call |
+| 17 | Robert W Baird - NTQ | Meeting Not Accepted | Simon | Arik |  | 2026-04-17 |  |  |
+| 18 | CME Group - N - SeaLights - Platform Engineering | S1 | https://tri-force.lightning.force.com/lightning/r/Opportunity/006Po00001ChK0rIAF/view | Eyal | Ashish expressed interest in automation and reducing the SDLC timeline as the main focus for a demo. He was hesitant due to Regulations but i assured him that SeaLights is approved by Similar companies and he was keen to learn more. | 2026-04-06 | "Go | true |
+| 19 | ScotiaBank - N - SeaLights - Cloud platform eng | S1 | Eyal | Daniel |  | 2026-04-14 | Java | Email Campaign |
+| 20 | Majesco - E- SeaLights - Naresh Kondapalli | S0 | Eyal | Daniel |  | 2026-04-16 | Python | LinkedIn |
+| 21 | Xylem - Sapna Narsa | S0 | Eyal | Jake |  | 2026-04-09 | Java | Email Campaign |
+| 22 |  |  |  |  |  | 2026-04-15T15:37:59.949Z |  |  |
+| 23 | Santander Bank - Muthupandiyaraja Balasubramanian | S0 | Eyal | Jake |  | 2026-04-23 | Java | Cold Call |
+| 24 | Freddie Mac -Jagadish Velaga | Meeting Not Accepted | Eyal | Arik |  | 2026-04-23 | Java | Email Campaign |
+| 25 |  |  |  |  |  |  |  |  |
+| 26 |  |  |  |  |  | 2026-04-15T15:32:13.987Z |  |  |
+| 27 | Hilton - Arik - Automation | S0 | Simon |  |  | 2026-04-15 |  |  |
+| 28 |  |  |  |  |  | 2026-04-15T15:56:19.586Z |  |  |
