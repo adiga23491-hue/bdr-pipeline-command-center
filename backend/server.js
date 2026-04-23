@@ -5,6 +5,7 @@ const fs   = require('fs');
 const path = require('path');
 const { parse }     = require('csv-parse/sync');
 const { stringify } = require('csv-stringify/sync');
+const { backupCSV } = require('./backup-csv.js');
 
 const app     = express();
 const PORT    = process.env.PORT || 3001;
@@ -27,7 +28,26 @@ function readCSV() {
   ensureCSV();
   const content = fs.readFileSync(CSV_PATH, 'utf8').trim();
   if (!content || content === HEADERS.join(',')) return [];
-  try { return parse(content, { columns: true, skip_empty_lines: true }); }
+  try {
+    const records = parse(content, { columns: true, skip_empty_lines: true });
+
+    // ── Data Migration: Fill missing columns with safe defaults ───────────────
+    // This ensures backward compatibility when schema changes
+    return records.map((record) => {
+      const migrated = { ...record };
+      HEADERS.forEach((header) => {
+        if (!(header in migrated)) {
+          // Add safe defaults based on column type
+          if (header === 'Meeting_Rejected') migrated[header] = 'false';
+          else if (header === 'Rejection_Reason') migrated[header] = '';
+          else if (header === 'Email') migrated[header] = '';
+          else if (header === 'Next_Step') migrated[header] = '';
+          else migrated[header] = ''; // Default for any future columns
+        }
+      });
+      return migrated;
+    });
+  }
   catch { return []; }
 }
 function writeCSV(records) {
@@ -103,5 +123,7 @@ if (IS_PROD) {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
+  // Create timestamped backup before serving
+  backupCSV();
   console.log(`\n  BDR Pipeline Backend  →  http://localhost:${PORT}\n`);
 });
