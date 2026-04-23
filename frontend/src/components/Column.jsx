@@ -6,6 +6,7 @@ const STAGE_THEME = {
   'S0':                   { hex: '#fdab3d', light: '#fff8ed', border: '#fde8c0', text: '#b36200', ring: 'ring-[#fdab3d]/30' },
   'S0 Occurred':          { hex: '#a25ddc', light: '#f5f0ff', border: '#ddd0f8', text: '#6645c6', ring: 'ring-[#a25ddc]/30' },
   'S1':                   { hex: '#00c875', light: '#edfdf5', border: '#b0e8cf', text: '#007038', ring: 'ring-[#00c875]/30' },
+  'S2':                   { hex: '#06b6d4', light: '#ecf8f9', border: '#a5f3fc', text: '#0a7ea4', ring: 'ring-[#06b6d4]/30' },
   'Rejected':             { hex: '#dc2626', light: '#fef2f2', border: '#fecaca', text: '#991b1b', ring: 'ring-[#dc2626]/30' },
 };
 

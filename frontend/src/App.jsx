@@ -9,7 +9,7 @@ const STAGE_PILLS = [
   { label: 'S1',           key: 'S1',                   style: 'bg-[#e6f9f1] text-[#007038] border border-[#b0e8cf]' },
 ];
 
-const BDR_NAMES = ['Simon', 'Steven', 'Eyal'];
+const BDR_NAMES = ['Simon', 'Steven', 'Eyal', 'Rachel'];
 
 export default function App() {
   const [opps, setOpps]               = useState([]);

@@ -15,6 +15,7 @@ export const STAGES = [
   { id: 'S0', label: 'S0 — Scheduled', short: 'S0', color: 'blue' },
   { id: 'S0 Occurred', label: 'S0 Occurred', short: 'S0 Occurred', color: 'violet' },
   { id: 'S1', label: 'S1 — Accepted', short: 'S1', color: 'emerald' },
+  { id: 'S2', label: 'S2 — Advanced', short: 'S2', color: 'cyan' },
   { id: 'Rejected', label: 'Rejected', short: 'Rejected', color: 'rose' },
 ];
 
