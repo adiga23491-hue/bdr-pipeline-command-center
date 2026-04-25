@@ -36,7 +36,10 @@
       "Bash(curl -s http://localhost:3001/api/activity)",
       "Bash(/Users/eyalyadin/.bun/bin/bun -e \"const data = JSON.parse\\(await Bun.stdin.text\\(\\)\\); console.log\\('Activity entries:', data.length\\)\")",
       "Bash(curl -s \"http://localhost:3001/api/opportunities?bdr=Steven\")",
-      "Bash(/Users/eyalyadin/.bun/bin/bun -e \"const data = JSON.parse\\(await Bun.stdin.text\\(\\)\\); console.log\\('Steven opportunities:', data.length\\)\")"
+      "Bash(/Users/eyalyadin/.bun/bin/bun -e \"const data = JSON.parse\\(await Bun.stdin.text\\(\\)\\); console.log\\('Steven opportunities:', data.length\\)\")",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(tar -xf design_extracted.tar)",
+      "Bash(/Users/eyalyadin/.bun/bin/bun run *)"
     ]
   }
 }

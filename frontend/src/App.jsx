@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import KanbanBoard from './components/KanbanBoard.jsx';
 import ManagerDashboard from './components/ManagerDashboard.jsx';
+import BDRDashboard from './components/BDRDashboard.jsx';
 import FilterBar from './components/FilterBar.jsx';
 import ActivityPanel from './components/ActivityPanel.jsx';
 
@@ -31,6 +32,7 @@ export default function App() {
   const [opps, setOpps]               = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardView, setDashboardView] = useState('manager'); // 'manager' or 'bdr'
   const [currentBDR, setCurrentBDR]    = useState(null);
   const [toast, setToast]             = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -244,26 +246,50 @@ export default function App() {
             </button>
 
             {/* Dashboard toggle */}
-            <button
-              onClick={() => {
-                if (showDashboard) {
-                  setShowDashboard(false);
-                } else {
-                  setShowPasswordModal(true);
-                  setPasswordInput('');
-                }
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
-                showDashboard
-                  ? 'bg-[#0073ea] border-[#0073ea] text-white shadow-sm'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-[#0073ea] hover:text-[#0073ea]'
-              }`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              {showDashboard ? 'Board' : 'Dashboard'}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  if (showDashboard) {
+                    setShowDashboard(false);
+                  } else {
+                    setShowPasswordModal(true);
+                    setPasswordInput('');
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
+                  showDashboard
+                    ? 'bg-[#0073ea] border-[#0073ea] text-white shadow-sm'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-[#0073ea] hover:text-[#0073ea]'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {showDashboard ? (dashboardView === 'bdr' ? 'BDR Analytics' : 'Manager') : 'Dashboard'}
+              </button>
+
+              {/* Dashboard view selector */}
+              {showDashboard && (
+                <div className="absolute top-full right-0 mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden min-w-[140px]">
+                  <button
+                    onClick={() => setDashboardView('manager')}
+                    className={`w-full px-3 py-2 text-xs text-left font-medium transition-colors ${
+                      dashboardView === 'manager' ? 'bg-[#0073ea] text-white' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    Manager View
+                  </button>
+                  <button
+                    onClick={() => setDashboardView('bdr')}
+                    className={`w-full px-3 py-2 text-xs text-left font-medium transition-colors ${
+                      dashboardView === 'bdr' ? 'bg-[#0073ea] text-white' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    BDR Analytics
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -276,7 +302,11 @@ export default function App() {
             <p className="text-sm text-gray-400">Loading pipeline…</p>
           </div>
         ) : showDashboard ? (
-          <ManagerDashboard opps={opps} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
+          dashboardView === 'bdr' ? (
+            <BDRDashboard opps={opps} bdrNames={BDR_NAMES} />
+          ) : (
+            <ManagerDashboard opps={opps} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
+          )
         ) : (
           <>
             <FilterBar
