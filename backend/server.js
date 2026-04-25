@@ -10,12 +10,21 @@ const { backupCSV } = require('./backup-csv.js');
 const app     = express();
 const PORT    = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
-const CSV_PATH = process.env.CSV_PATH || path.join(__dirname, 'pipeline_master.csv');
+const CSV_PATH      = process.env.CSV_PATH      || path.join(__dirname, 'pipeline_master.csv');
+const ACTIVITY_PATH = process.env.ACTIVITY_PATH || path.join(__dirname, 'activity_log.json');
 
 const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Meeting_Rejected','Rejection_Reason','Last_Updated'];
 
-app.set('trust proxy', 1);
+// Human-readable labels for field names
+const FIELD_LABELS = {
+  Opp_Name: 'Name', Stage: 'Stage', Meeting_Date: 'Meeting Date',
+  Languages: 'Languages', Pain_Validated: 'Pain Validated', Source: 'Source',
+  Link: 'Link', BDR_Name: 'BDR', AE_Name: 'AE', Notes: 'Notes',
+  Email: 'Email', Next_Step: 'Next Step', Meeting_Rejected: 'Rejected',
+  Rejection_Reason: 'Rejection Reason',
+};
 
+app.set('trust proxy', 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
@@ -30,19 +39,15 @@ function readCSV() {
   if (!content || content === HEADERS.join(',')) return [];
   try {
     const records = parse(content, { columns: true, skip_empty_lines: true });
-
-    // ── Data Migration: Fill missing columns with safe defaults ───────────────
-    // This ensures backward compatibility when schema changes
     return records.map((record) => {
       const migrated = { ...record };
       HEADERS.forEach((header) => {
         if (!(header in migrated)) {
-          // Add safe defaults based on column type
           if (header === 'Meeting_Rejected') migrated[header] = 'false';
           else if (header === 'Rejection_Reason') migrated[header] = '';
           else if (header === 'Email') migrated[header] = '';
           else if (header === 'Next_Step') migrated[header] = '';
-          else migrated[header] = ''; // Default for any future columns
+          else migrated[header] = '';
         }
       });
       return migrated;
@@ -54,22 +59,54 @@ function writeCSV(records) {
   fs.writeFileSync(CSV_PATH, stringify(records, { header: true, columns: HEADERS }), 'utf8');
 }
 
+// ── Activity log helpers ─────────────────────────────────────────────────────
+function readActivity() {
+  if (!fs.existsSync(ACTIVITY_PATH)) return [];
+  try { return JSON.parse(fs.readFileSync(ACTIVITY_PATH, 'utf8')); }
+  catch { return []; }
+}
+
+function logActivity(action, opp, changes = null) {
+  const log = readActivity();
+  const entry = {
+    id: uuidv4(),
+    timestamp: new Date().toISOString(),
+    action,                          // 'created' | 'updated' | 'deleted'
+    oppId:   opp.Id,
+    oppName: opp.Opp_Name || 'Untitled',
+    bdrName: opp.BDR_Name || '',
+    changes: changes || [],          // [{ field, label, oldValue, newValue }]
+  };
+  log.unshift(entry);
+  // Keep last 500 entries
+  if (log.length > 500) log.splice(500);
+  fs.writeFileSync(ACTIVITY_PATH, JSON.stringify(log, null, 2), 'utf8');
+}
+
+function diffOpps(oldOpp, newFields) {
+  const skip = new Set(['Last_Updated', 'Id']);
+  return Object.entries(newFields)
+    .filter(([k, v]) => !skip.has(k) && String(oldOpp[k] ?? '') !== String(v ?? ''))
+    .map(([k, v]) => ({
+      field:    k,
+      label:    FIELD_LABELS[k] || k,
+      oldValue: oldOpp[k] || '',
+      newValue: String(v),
+    }));
+}
+
 // ── API routes ───────────────────────────────────────────────────────────────
 
 app.get('/api/opportunities', (req, res) => {
   let opps = readCSV();
   const bdrFilter = req.query.bdr;
-  if (bdrFilter) {
-    opps = opps.filter((o) => o.BDR_Name === bdrFilter);
-  }
+  if (bdrFilter) opps = opps.filter((o) => o.BDR_Name === bdrFilter);
   res.json(opps);
 });
 
 app.post('/api/opportunities', (req, res) => {
-  // Email is required
-  if (!req.body.Email || !req.body.Email.trim()) {
+  if (!req.body.Email || !req.body.Email.trim())
     return res.status(400).json({ error: 'Email is required to create an opportunity' });
-  }
 
   const records = readCSV();
   const opp = {
@@ -92,6 +129,7 @@ app.post('/api/opportunities', (req, res) => {
   };
   records.push(opp);
   writeCSV(records);
+  logActivity('created', opp);
   res.status(201).json(opp);
 });
 
@@ -99,14 +137,25 @@ app.put('/api/opportunities/:id', (req, res) => {
   const records = readCSV();
   const idx = records.findIndex((r) => r.Id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  records[idx] = { ...records[idx], ...req.body, Id: records[idx].Id, Last_Updated: new Date().toISOString() };
+
+  const oldOpp = records[idx];
+  const changes = diffOpps(oldOpp, req.body);
+  records[idx] = { ...oldOpp, ...req.body, Id: oldOpp.Id, Last_Updated: new Date().toISOString() };
   writeCSV(records);
+  if (changes.length > 0) logActivity('updated', records[idx], changes);
   res.json(records[idx]);
 });
 
 app.delete('/api/opportunities/:id', (req, res) => {
-  writeCSV(readCSV().filter((r) => r.Id !== req.params.id));
+  const records = readCSV();
+  const opp = records.find((r) => r.Id === req.params.id);
+  writeCSV(records.filter((r) => r.Id !== req.params.id));
+  if (opp) logActivity('deleted', opp);
   res.json({ success: true });
+});
+
+app.get('/api/activity', (_req, res) => {
+  res.json(readActivity());
 });
 
 app.get('/api/export', (_req, res) => {
@@ -123,7 +172,6 @@ if (IS_PROD) {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  // Create timestamped backup before serving
   backupCSV();
   console.log(`\n  BDR Pipeline Backend  →  http://localhost:${PORT}\n`);
 });
