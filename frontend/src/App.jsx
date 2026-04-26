@@ -3,6 +3,8 @@ import KanbanBoard from './components/KanbanBoard.jsx';
 import ManagerDashboard from './components/ManagerDashboard.jsx';
 import BDRDashboard from './components/BDRDashboard.jsx';
 import RacheliOpps from './components/RacheliOpps.jsx';
+import OppModal from './components/OppModal.jsx';
+import ListView from './components/ListView.jsx';
 import FilterBar from './components/FilterBar.jsx';
 import ActivityPanel from './components/ActivityPanel.jsx';
 import Sidebar from './components/Sidebar.jsx';
@@ -33,7 +35,7 @@ function getMeetingAlerts(opps) {
 
 export default function App() {
   // ── Navigation ─────────────────────────────────────────────────────────────
-  const [activePage, setActivePage] = useState('pipeline'); // 'pipeline' | 'dashboard' | 'playbook'
+  const [activePage, setActivePage] = useState('pipeline'); // 'pipeline' | 'dashboard' | 'playbook' | 'racheli'
   const [dashboardView, setDashboardView] = useState('manager'); // 'manager' | 'bdr'
 
   // ── Pipeline state ─────────────────────────────────────────────────────────
@@ -49,7 +51,9 @@ export default function App() {
   const [filters, setFilters]         = useState(DEFAULT_FILTERS);
   const [showActivity, setShowActivity] = useState(false);
   const [showAlerts, setShowAlerts]   = useState(false);
-  const [showRacheliOpps, setShowRacheliOpps] = useState(false);
+  const [viewMode, setViewMode]       = useState('kanban'); // 'kanban' | 'list'
+  const [stageFilter, setStageFilter] = useState('both');   // 'both' | 's1' | 's2'
+  const [oppModal, setOppModal]       = useState(null);     // null | { mode: 'add'|'edit', opp?: {} }
 
   const notify = useCallback((msg, type = 'success') => {
     setToast({ msg, type });
@@ -73,6 +77,34 @@ export default function App() {
       setActivePage(page);
     }
   };
+
+  // ── Opp modal handlers ─────────────────────────────────────────────────────
+  const handleOpenAdd = () => setOppModal({ mode: 'add', opp: null });
+  const handleOpenEdit = (opp) => setOppModal({ mode: 'edit', opp });
+  const handleCloseModal = () => setOppModal(null);
+
+  const handleModalSave = async (formData) => {
+    if (oppModal.mode === 'add') {
+      await completeAddOpp(formData.Stage, formData.BDR_Name, formData.Email || '');
+      // After the temp opp is replaced by the real one, updateOpp with full data
+      // Simpler: just call the full add path with all fields
+      const tempId = `temp-${Date.now()}`;
+      const draft = { Id: tempId, ...formData, Last_Updated: new Date().toISOString() };
+      setOpps((prev) => [draft, ...prev]);
+      try {
+        const res  = await fetch('/api/opportunities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
+        const data = await res.json();
+        if (!res.ok) { setOpps((prev) => prev.filter((o) => o.Id !== tempId)); notify(data.error || 'Failed to create', 'error'); }
+        else { setOpps((prev) => prev.map((o) => (o.Id === tempId ? data : o))); notify('Opportunity created', 'success'); }
+      } catch { setOpps((prev) => prev.filter((o) => o.Id !== tempId)); notify('Failed to create', 'error'); }
+    } else {
+      await updateOpp(oppModal.opp.Id, formData);
+      notify('Opportunity updated', 'success');
+    }
+    handleCloseModal();
+  };
+
+  const handleMoveStage = (id, targetStage) => updateOpp(id, { Stage: targetStage });
 
   // ── Load opportunities ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -153,6 +185,12 @@ export default function App() {
   const isPipeline  = activePage === 'pipeline';
   const isDashboard = activePage === 'dashboard';
   const isPlaybook  = activePage === 'playbook';
+  const isRacheli   = activePage === 'racheli';
+
+  // Stage filter applied on top of other filters
+  const stageFilteredOpps = stageFilter === 'both'
+    ? filteredOpps
+    : filteredOpps.filter((o) => o.Stage === stageFilter.toUpperCase());
 
   return (
     <div className="h-screen flex flex-col bg-[#f5f6f8] text-gray-800 font-sans overflow-hidden">
@@ -248,21 +286,6 @@ export default function App() {
               </select>
             )}
 
-            {/* Racheli Opps toggle */}
-            {!isPlaybook && (
-              <button
-                onClick={() => setShowRacheliOpps((v) => !v)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
-                  showRacheliOpps
-                    ? 'bg-gradient-to-r from-pink-500 to-violet-500 border-violet-500 text-white shadow-sm'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-violet-400 hover:text-violet-600'
-                }`}
-              >
-                <span className="font-bold">R</span>
-                {showRacheliOpps ? 'Back' : 'Racheli Opps'}
-              </button>
-            )}
-
             {/* Export — pipeline only */}
             {isPipeline && (
               <a
@@ -327,15 +350,8 @@ export default function App() {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
 
-          {/* Racheli Opps overlay (separate view, doesn't affect main pipeline) */}
-          {showRacheliOpps && (
-            <div className="px-6 py-6">
-              <RacheliOpps />
-            </div>
-          )}
-
           {/* Pipeline page */}
-          {!showRacheliOpps && isPipeline && (
+          {isPipeline && (
             <div className="px-6 py-6">
               {dataLoading ? (
                 <div className="flex flex-col items-center justify-center h-64 gap-3">
@@ -348,24 +364,86 @@ export default function App() {
                     filters={filters}
                     onChange={setFilters}
                     bdrNames={BDR_NAMES}
-                    resultCount={filteredOpps.length}
+                    resultCount={stageFilteredOpps.length}
                     totalCount={opps.length}
                   />
-                  <KanbanBoard
-                    opps={filteredOpps}
-                    onAdd={addOpp}
-                    onUpdate={updateOpp}
-                    onDelete={deleteOpp}
-                    currentBDR={currentBDR}
-                    bdrNames={BDR_NAMES}
-                  />
+
+                  {/* ── Pipeline toolbar: Add, View toggle, Stage filter ── */}
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    {/* + Add Opportunity */}
+                    <button
+                      onClick={handleOpenAdd}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0073ea] hover:bg-[#0063d0] rounded-lg transition-colors shadow-sm"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Opportunity
+                    </button>
+
+                    <div className="w-px h-5 bg-gray-200" />
+
+                    {/* Kanban / List toggle */}
+                    <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+                      {[{ id: 'kanban', label: 'Kanban' }, { id: 'list', label: 'List' }].map(({ id, label }) => (
+                        <button
+                          key={id}
+                          onClick={() => setViewMode(id)}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                            viewMode === id ? 'bg-white text-[#0073ea] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="w-px h-5 bg-gray-200" />
+
+                    {/* S1 / S2 stage filter */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-400 font-medium">Stage:</span>
+                      {[{ id: 'both', label: 'All' }, { id: 's1', label: 'S1 Only' }, { id: 's2', label: 'S2 Only' }].map(({ id, label }) => (
+                        <button
+                          key={id}
+                          onClick={() => setStageFilter(id)}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                            stageFilter === id
+                              ? 'bg-gray-800 text-white border-gray-800'
+                              : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {viewMode === 'list' ? (
+                    <ListView
+                      opps={stageFilteredOpps}
+                      onEdit={handleOpenEdit}
+                      onUpdate={updateOpp}
+                    />
+                  ) : (
+                    <KanbanBoard
+                      opps={stageFilteredOpps}
+                      onAdd={addOpp}
+                      onUpdate={updateOpp}
+                      onDelete={deleteOpp}
+                      currentBDR={currentBDR}
+                      bdrNames={BDR_NAMES}
+                      onEdit={handleOpenEdit}
+                      onMoveStage={handleMoveStage}
+                    />
+                  )}
                 </>
               )}
             </div>
           )}
 
           {/* Dashboard page */}
-          {!showRacheliOpps && isDashboard && (
+          {isDashboard && (
             <div className="px-6 py-6">
               {dataLoading ? (
                 <div className="flex flex-col items-center justify-center h-64 gap-3">
@@ -381,12 +459,29 @@ export default function App() {
           )}
 
           {/* Playbook page */}
-          {!showRacheliOpps && isPlaybook && <Playbook />}
+          {isPlaybook && <Playbook />}
+
+          {/* Racheli Opps page */}
+          {isRacheli && (
+            <div className="px-6 py-6">
+              <RacheliOpps />
+            </div>
+          )}
         </main>
       </div>
 
       {/* ── Activity Panel ──────────────────────────────────────────────── */}
       {showActivity && <ActivityPanel onClose={() => setShowActivity(false)} />}
+
+      {/* ── Opp Add/Edit Modal ──────────────────────────────────────────── */}
+      {oppModal && (
+        <OppModal
+          opp={oppModal.mode === 'edit' ? oppModal.opp : null}
+          bdrNames={BDR_NAMES}
+          onSave={handleModalSave}
+          onClose={handleCloseModal}
+        />
+      )}
 
       {/* ── Email Modal ─────────────────────────────────────────────────── */}
       {showEmailModal && (

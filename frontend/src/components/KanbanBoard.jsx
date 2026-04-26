@@ -19,7 +19,7 @@ export const STAGES = [
   { id: 'Rejected', label: 'Rejected', short: 'Rejected', color: 'rose' },
 ];
 
-export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBDR, bdrNames }) {
+export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBDR, bdrNames, onEdit, onMoveStage }) {
   const [activeId, setActiveId] = useState(null);
   const [showBDRModal, setShowBDRModal] = useState(false);
   const [pendingStage, setPendingStage] = useState(null);
@@ -83,6 +83,8 @@ export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBD
             onDelete={onDelete}
             isDraggingId={activeId}
             bdrNames={bdrNames}
+            onEdit={onEdit}
+            onMoveStage={onMoveStage}
           />
         ))}
       </div>

@@ -58,7 +58,7 @@ function getMeetingStatus(dateStr) {
   return null;
 }
 
-export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, isGhost, bdrNames = [] }) {
+export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, isGhost, bdrNames = [], onEdit, onMoveStage }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: opp.Id,
     disabled: isOverlay,
@@ -169,6 +169,19 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
               <circle cx="7" cy="15" r="1.2" /><circle cx="13" cy="15" r="1.2" />
             </svg>
           </div>
+        )}
+
+        {/* Edit (pencil) icon — visible on hover */}
+        {!isOverlay && onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(opp); }}
+            className="absolute top-2.5 right-2 p-1 opacity-0 group-hover:opacity-100 text-gray-300 hover:text-[#0073ea] transition-opacity rounded"
+            title="Edit opportunity"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M16.732 3.732a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
         )}
 
         {/* ── TOP ROW: BDR + AE badges ─────────────────────────── */}
@@ -501,15 +514,30 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
                 ? new Date(opp.Last_Updated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                 : ''}
             </span>
-            <button
-              onClick={() => onDelete(opp.Id)}
-              className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
-              title="Delete"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* Move S1 ↔ S2 button */}
+              {onMoveStage && (opp.Stage === 'S1' || opp.Stage === 'S2') && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onMoveStage(opp.Id, opp.Stage === 'S1' ? 'S2' : 'S1'); }}
+                  className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold transition-all text-[#0073ea] hover:bg-blue-50 border border-transparent hover:border-blue-200"
+                  title={opp.Stage === 'S1' ? 'Move to S2' : 'Move to S1'}
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={opp.Stage === 'S1' ? 'M13 7l5 5m0 0l-5 5m5-5H6' : 'M11 17l-5-5m0 0l5-5m-5 5h12'} />
+                  </svg>
+                  {opp.Stage === 'S1' ? 'S2' : 'S1'}
+                </button>
+              )}
+              <button
+                onClick={() => onDelete(opp.Id)}
+                className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all"
+                title="Delete"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
       </div>
