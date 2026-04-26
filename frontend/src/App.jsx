@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import KanbanBoard from './components/KanbanBoard.jsx';
 import ManagerDashboard from './components/ManagerDashboard.jsx';
 import BDRDashboard from './components/BDRDashboard.jsx';
+import RacheliOpps from './components/RacheliOpps.jsx';
 import FilterBar from './components/FilterBar.jsx';
 import ActivityPanel from './components/ActivityPanel.jsx';
+import Sidebar from './components/Sidebar.jsx';
+import Playbook from './components/Playbook.jsx';
 
 const STAGE_PILLS = [
   { label: 'Not Accepted', key: 'Meeting Not Accepted', style: 'bg-[#ffe9e9] text-[#c9372c] border border-[#f5c2c0]' },
@@ -20,7 +23,7 @@ function getMeetingAlerts(opps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const soon = new Date(today);
-  soon.setDate(soon.getDate() + 2); // within 2 days
+  soon.setDate(soon.getDate() + 2);
   return opps.filter((o) => {
     if (!o.Meeting_Date || o.Stage === 'Rejected' || o.Meeting_Rejected === 'true') return false;
     const d = new Date(o.Meeting_Date);
@@ -29,25 +32,47 @@ function getMeetingAlerts(opps) {
 }
 
 export default function App() {
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  const [activePage, setActivePage] = useState('pipeline'); // 'pipeline' | 'dashboard' | 'playbook'
+  const [dashboardView, setDashboardView] = useState('manager'); // 'manager' | 'bdr'
+
+  // ── Pipeline state ─────────────────────────────────────────────────────────
   const [opps, setOpps]               = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [showDashboard, setShowDashboard] = useState(false);
-  const [dashboardView, setDashboardView] = useState('manager'); // 'manager' or 'bdr'
-  const [currentBDR, setCurrentBDR]    = useState(null);
+  const [currentBDR, setCurrentBDR]   = useState(null);
   const [toast, setToast]             = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
+  const [emailInput, setEmailInput]   = useState('');
   const [pendingAddition, setPendingAddition] = useState(null);
   const [filters, setFilters]         = useState(DEFAULT_FILTERS);
   const [showActivity, setShowActivity] = useState(false);
   const [showAlerts, setShowAlerts]   = useState(false);
+  const [showRacheliOpps, setShowRacheliOpps] = useState(false);
 
   const notify = useCallback((msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 2800);
   }, []);
+
+  // ── Navigate to dashboard (requires password) ──────────────────────────────
+  const handleDashboardNav = () => {
+    if (activePage === 'dashboard') {
+      setActivePage('pipeline');
+    } else {
+      setShowPasswordModal(true);
+      setPasswordInput('');
+    }
+  };
+
+  const handleSidebarNav = (page) => {
+    if (page === 'dashboard') {
+      handleDashboardNav();
+    } else {
+      setActivePage(page);
+    }
+  };
 
   // ── Load opportunities ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -70,15 +95,12 @@ export default function App() {
         o.Email?.toLowerCase().includes(q) ||
         o.Notes?.toLowerCase().includes(q)
       )) return false;
-
       if (filters.source && o.Source !== filters.source) return false;
-
       if (filters.pain !== null) {
         const isValidated = o.Pain_Validated === 'true';
         if (filters.pain && !isValidated) return false;
         if (!filters.pain && isValidated) return false;
       }
-
       return true;
     });
   }, [opps, filters]);
@@ -127,14 +149,17 @@ export default function App() {
     catch { notify('Delete failed', 'error'); }
   }, [notify]);
 
-  const hasFilters = filters.search || filters.source || filters.pain !== null;
+  // ── Render helpers ─────────────────────────────────────────────────────────
+  const isPipeline  = activePage === 'pipeline';
+  const isDashboard = activePage === 'dashboard';
+  const isPlaybook  = activePage === 'playbook';
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8] text-gray-800 font-sans">
+    <div className="h-screen flex flex-col bg-[#f5f6f8] text-gray-800 font-sans overflow-hidden">
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="mx-auto max-w-screen-2xl px-6 py-3 flex items-center gap-3">
+      <header className="flex-shrink-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-6 py-3 flex items-center gap-3">
 
           {/* Logo */}
           <div className="flex items-center gap-3 mr-3">
@@ -144,26 +169,34 @@ export default function App() {
               </svg>
             </div>
             <div>
-              <h1 className="text-sm font-bold text-gray-800 leading-none tracking-tight">BDR Pipeline</h1>
+              <h1 className="text-sm font-bold text-gray-800 leading-none tracking-tight">
+                {isPlaybook ? 'BDR Playbook Coach' : 'BDR Pipeline'}
+              </h1>
               <p className="text-xs text-gray-400 leading-none mt-0.5">
-                {currentBDR ? `${currentBDR}'s View` : 'All Opportunities'}
+                {isPlaybook
+                  ? 'SeaLights · Tricentis'
+                  : isDashboard
+                    ? (dashboardView === 'bdr' ? 'BDR Analytics' : 'Manager Dashboard')
+                    : currentBDR ? `${currentBDR}'s View` : 'All Opportunities'}
               </p>
             </div>
           </div>
 
-          {/* Stage pills */}
-          <div className="hidden lg:flex items-center gap-1.5">
-            {STAGE_PILLS.map((s) => (
-              <span key={s.key} className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${s.style}`}>
-                {opps.filter((o) => o.Stage === s.key).length} {s.label}
-              </span>
-            ))}
-          </div>
+          {/* Stage pills — pipeline only */}
+          {isPipeline && (
+            <div className="hidden lg:flex items-center gap-1.5">
+              {STAGE_PILLS.map((s) => (
+                <span key={s.key} className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${s.style}`}>
+                  {opps.filter((o) => o.Stage === s.key).length} {s.label}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="ml-auto flex items-center gap-2">
 
-            {/* Meeting alerts bell */}
-            {alerts.length > 0 && (
+            {/* Meeting alerts — pipeline only */}
+            {isPipeline && alerts.length > 0 && (
               <div className="relative">
                 <button
                   onClick={() => setShowAlerts((v) => !v)}
@@ -174,8 +207,6 @@ export default function App() {
                   </svg>
                   {alerts.length} meeting{alerts.length > 1 ? 's' : ''} soon
                 </button>
-
-                {/* Alert dropdown */}
                 {showAlerts && (
                   <div className="absolute top-full right-0 mt-2 z-50 bg-white border border-amber-100 rounded-xl shadow-xl w-72 overflow-hidden">
                     <div className="px-4 py-2.5 border-b border-amber-50 bg-amber-50">
@@ -197,136 +228,162 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <button
-                      onClick={() => setShowAlerts(false)}
-                      className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 border-t border-gray-100 transition-colors"
-                    >
-                      Close
-                    </button>
+                    <button onClick={() => setShowAlerts(false)} className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 border-t border-gray-100 transition-colors">Close</button>
                   </div>
                 )}
               </div>
             )}
 
-            {/* BDR Filter */}
-            <select
-              value={currentBDR || ''}
-              onChange={(e) => setCurrentBDR(e.target.value || null)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg transition-colors bg-white cursor-pointer hover:border-gray-300 focus:outline-none focus:border-[#0073ea]"
-            >
-              <option value="">All BDRs</option>
-              {BDR_NAMES.map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
+            {/* BDR Filter — pipeline/dashboard only */}
+            {!isPlaybook && (
+              <select
+                value={currentBDR || ''}
+                onChange={(e) => setCurrentBDR(e.target.value || null)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg transition-colors bg-white cursor-pointer hover:border-gray-300 focus:outline-none focus:border-[#0073ea]"
+              >
+                <option value="">All BDRs</option>
+                {BDR_NAMES.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            )}
 
-            <a
-              href="/api/export"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded-lg transition-colors bg-white"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export
-            </a>
-
-            {/* Activity Log */}
-            <button
-              onClick={() => setShowActivity((v) => !v)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
-                showActivity
-                  ? 'bg-violet-600 border-violet-600 text-white shadow-sm'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-violet-300 hover:text-violet-600'
-              }`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Activity
-            </button>
-
-            {/* Dashboard toggle */}
-            <div className="relative">
+            {/* Racheli Opps toggle */}
+            {!isPlaybook && (
               <button
-                onClick={() => {
-                  if (showDashboard) {
-                    setShowDashboard(false);
-                  } else {
-                    setShowPasswordModal(true);
-                    setPasswordInput('');
-                  }
-                }}
+                onClick={() => setShowRacheliOpps((v) => !v)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
-                  showDashboard
-                    ? 'bg-[#0073ea] border-[#0073ea] text-white shadow-sm'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-[#0073ea] hover:text-[#0073ea]'
+                  showRacheliOpps
+                    ? 'bg-gradient-to-r from-pink-500 to-violet-500 border-violet-500 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-violet-400 hover:text-violet-600'
+                }`}
+              >
+                <span className="font-bold">R</span>
+                {showRacheliOpps ? 'Back' : 'Racheli Opps'}
+              </button>
+            )}
+
+            {/* Export — pipeline only */}
+            {isPipeline && (
+              <a
+                href="/api/export"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded-lg transition-colors bg-white"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export
+              </a>
+            )}
+
+            {/* Activity Log — pipeline only */}
+            {isPipeline && (
+              <button
+                onClick={() => setShowActivity((v) => !v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
+                  showActivity
+                    ? 'bg-violet-600 border-violet-600 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-violet-300 hover:text-violet-600'
                 }`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {showDashboard ? (dashboardView === 'bdr' ? 'BDR Analytics' : 'Manager') : 'Dashboard'}
+                Activity
               </button>
+            )}
 
-              {/* Dashboard view selector */}
-              {showDashboard && (
-                <div className="absolute top-full right-0 mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden min-w-[140px]">
-                  <button
-                    onClick={() => setDashboardView('manager')}
-                    className={`w-full px-3 py-2 text-xs text-left font-medium transition-colors ${
-                      dashboardView === 'manager' ? 'bg-[#0073ea] text-white' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    Manager View
-                  </button>
-                  <button
-                    onClick={() => setDashboardView('bdr')}
-                    className={`w-full px-3 py-2 text-xs text-left font-medium transition-colors ${
-                      dashboardView === 'bdr' ? 'bg-[#0073ea] text-white' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    BDR Analytics
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Dashboard toggle — when on dashboard, show view switcher */}
+            {isDashboard && (
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+                <button
+                  onClick={() => setDashboardView('manager')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    dashboardView === 'manager' ? 'bg-white text-[#0073ea] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Manager
+                </button>
+                <button
+                  onClick={() => setDashboardView('bdr')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    dashboardView === 'bdr' ? 'bg-white text-[#0073ea] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  BDR Analytics
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* ── Main ────────────────────────────────────────────────────────── */}
-      <main className="mx-auto max-w-screen-2xl px-6 py-6">
-        {dataLoading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3">
-            <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-gray-400">Loading pipeline…</p>
-          </div>
-        ) : showDashboard ? (
-          dashboardView === 'bdr' ? (
-            <BDRDashboard opps={opps} bdrNames={BDR_NAMES} />
-          ) : (
-            <ManagerDashboard opps={opps} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
-          )
-        ) : (
-          <>
-            <FilterBar
-              filters={filters}
-              onChange={setFilters}
-              bdrNames={BDR_NAMES}
-              resultCount={filteredOpps.length}
-              totalCount={opps.length}
-            />
-            <KanbanBoard
-              opps={filteredOpps}
-              onAdd={addOpp}
-              onUpdate={updateOpp}
-              onDelete={deleteOpp}
-              currentBDR={currentBDR}
-              bdrNames={BDR_NAMES}
-            />
-          </>
-        )}
-      </main>
+      {/* ── Body: Sidebar + Content ──────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Sidebar */}
+        <Sidebar activePage={activePage} onChange={handleSidebarNav} />
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+
+          {/* Racheli Opps overlay (separate view, doesn't affect main pipeline) */}
+          {showRacheliOpps && (
+            <div className="px-6 py-6">
+              <RacheliOpps />
+            </div>
+          )}
+
+          {/* Pipeline page */}
+          {!showRacheliOpps && isPipeline && (
+            <div className="px-6 py-6">
+              {dataLoading ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-gray-400">Loading pipeline…</p>
+                </div>
+              ) : (
+                <>
+                  <FilterBar
+                    filters={filters}
+                    onChange={setFilters}
+                    bdrNames={BDR_NAMES}
+                    resultCount={filteredOpps.length}
+                    totalCount={opps.length}
+                  />
+                  <KanbanBoard
+                    opps={filteredOpps}
+                    onAdd={addOpp}
+                    onUpdate={updateOpp}
+                    onDelete={deleteOpp}
+                    currentBDR={currentBDR}
+                    bdrNames={BDR_NAMES}
+                  />
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Dashboard page */}
+          {!showRacheliOpps && isDashboard && (
+            <div className="px-6 py-6">
+              {dataLoading ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-gray-400">Loading…</p>
+                </div>
+              ) : dashboardView === 'bdr' ? (
+                <BDRDashboard opps={opps} bdrNames={BDR_NAMES} />
+              ) : (
+                <ManagerDashboard opps={opps} currentBDR={currentBDR} bdrNames={BDR_NAMES} />
+              )}
+            </div>
+          )}
+
+          {/* Playbook page */}
+          {!showRacheliOpps && isPlaybook && <Playbook />}
+        </main>
+      </div>
 
       {/* ── Activity Panel ──────────────────────────────────────────────── */}
       {showActivity && <ActivityPanel onClose={() => setShowActivity(false)} />}
@@ -393,7 +450,7 @@ export default function App() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   if (passwordInput === '1234') {
-                    setShowDashboard(true);
+                    setActivePage('dashboard');
                     setShowPasswordModal(false);
                     setPasswordInput('');
                   } else {
@@ -410,7 +467,7 @@ export default function App() {
               <button
                 onClick={() => {
                   if (passwordInput === '1234') {
-                    setShowDashboard(true);
+                    setActivePage('dashboard');
                     setShowPasswordModal(false);
                     setPasswordInput('');
                   } else {
