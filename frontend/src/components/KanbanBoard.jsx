@@ -19,7 +19,7 @@ export const STAGES = [
   { id: 'Rejected', label: 'Rejected', short: 'Rejected', color: 'rose' },
 ];
 
-export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBDR, bdrNames, onEdit, onMoveStage }) {
+export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBDR, bdrNames, onEdit, onMoveStage, stagesOverride }) {
   const [activeId, setActiveId] = useState(null);
   const [showBDRModal, setShowBDRModal] = useState(false);
   const [pendingStage, setPendingStage] = useState(null);
@@ -30,6 +30,7 @@ export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBD
     })
   );
 
+  const activeStages = stagesOverride || STAGES;
   const activeOpp = opps.find((o) => o.Id === activeId);
 
   const handleDragStart = ({ active }) => setActiveId(active.id);
@@ -73,7 +74,7 @@ export default function KanbanBoard({ opps, onAdd, onUpdate, onDelete, currentBD
       onDragCancel={handleDragCancel}
     >
       <div className="flex gap-4 overflow-x-auto pb-6" style={{ minHeight: 'calc(100vh - 9rem)' }}>
-        {STAGES.map((stage) => (
+        {activeStages.map((stage) => (
           <Column
             key={stage.id}
             stage={stage}

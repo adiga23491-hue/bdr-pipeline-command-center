@@ -10,8 +10,9 @@ const { backupCSV } = require('./backup-csv.js');
 const app     = express();
 const PORT    = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
-const CSV_PATH      = process.env.CSV_PATH      || path.join(__dirname, 'pipeline_master.csv');
-const ACTIVITY_PATH = process.env.ACTIVITY_PATH || path.join(__dirname, 'activity_log.json');
+const CSV_PATH        = process.env.CSV_PATH        || path.join(__dirname, 'pipeline_master.csv');
+const RACHELI_CSV_PATH = process.env.RACHELI_CSV_PATH || path.join(__dirname, 'racheli_opps.csv');
+const ACTIVITY_PATH   = process.env.ACTIVITY_PATH   || path.join(__dirname, 'activity_log.json');
 
 const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Meeting_Rejected','Rejection_Reason','Last_Updated'];
 
@@ -57,6 +58,34 @@ function readCSV() {
 }
 function writeCSV(records) {
   fs.writeFileSync(CSV_PATH, stringify(records, { header: true, columns: HEADERS }), 'utf8');
+}
+
+// ── Racheli CSV helpers (separate data store) ────────────────────────────────
+function ensureRacheliCSV() {
+  if (!fs.existsSync(RACHELI_CSV_PATH))
+    fs.writeFileSync(RACHELI_CSV_PATH, HEADERS.join(',') + '\n', 'utf8');
+}
+function readRacheliCSV() {
+  ensureRacheliCSV();
+  const content = fs.readFileSync(RACHELI_CSV_PATH, 'utf8').trim();
+  if (!content || content === HEADERS.join(',')) return [];
+  try {
+    const records = parse(content, { columns: true, skip_empty_lines: true });
+    return records.map((record) => {
+      const migrated = { ...record };
+      HEADERS.forEach((header) => {
+        if (!(header in migrated)) {
+          if (header === 'Meeting_Rejected') migrated[header] = 'false';
+          else migrated[header] = '';
+        }
+      });
+      return migrated;
+    });
+  }
+  catch { return []; }
+}
+function writeRacheliCSV(records) {
+  fs.writeFileSync(RACHELI_CSV_PATH, stringify(records, { header: true, columns: HEADERS }), 'utf8');
 }
 
 // ── Activity log helpers ─────────────────────────────────────────────────────
@@ -161,6 +190,56 @@ app.get('/api/activity', (_req, res) => {
 app.get('/api/export', (_req, res) => {
   ensureCSV();
   res.download(CSV_PATH, 'pipeline_master.csv');
+});
+
+// ── Racheli Opps routes (separate data store — never touches main CSV) ────────
+app.get('/api/racheli', (_req, res) => {
+  res.json(readRacheliCSV());
+});
+
+app.post('/api/racheli', (req, res) => {
+  const records = readRacheliCSV();
+  const opp = {
+    Id:               uuidv4(),
+    Opp_Name:         req.body.Opp_Name         || 'New Opportunity',
+    Stage:            req.body.Stage            || 'S1',
+    Meeting_Date:     req.body.Meeting_Date     || '',
+    Languages:        req.body.Languages        || '',
+    Pain_Validated:   String(req.body.Pain_Validated ?? 'false'),
+    Source:           req.body.Source           || '',
+    Link:             req.body.Link             || '',
+    BDR_Name:         req.body.BDR_Name         || '',
+    AE_Name:          req.body.AE_Name          || '',
+    Notes:            req.body.Notes            || '',
+    Email:            req.body.Email            || '',
+    Next_Step:        req.body.Next_Step        || '',
+    Meeting_Rejected: String(req.body.Meeting_Rejected ?? 'false'),
+    Rejection_Reason: req.body.Rejection_Reason || '',
+    Last_Updated:     new Date().toISOString(),
+  };
+  records.push(opp);
+  writeRacheliCSV(records);
+  res.status(201).json(opp);
+});
+
+app.put('/api/racheli/:id', (req, res) => {
+  const records = readRacheliCSV();
+  const idx = records.findIndex((r) => r.Id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  records[idx] = { ...records[idx], ...req.body, Id: records[idx].Id, Last_Updated: new Date().toISOString() };
+  writeRacheliCSV(records);
+  res.json(records[idx]);
+});
+
+app.delete('/api/racheli/:id', (req, res) => {
+  const records = readRacheliCSV();
+  writeRacheliCSV(records.filter((r) => r.Id !== req.params.id));
+  res.json({ success: true });
+});
+
+app.get('/api/racheli/export', (_req, res) => {
+  ensureRacheliCSV();
+  res.download(RACHELI_CSV_PATH, 'racheli_opps.csv');
 });
 
 // ── Serve built React frontend in production ─────────────────────────────────

@@ -464,15 +464,7 @@ export default function App() {
           {/* Racheli Opps page */}
           {isRacheli && (
             <div className="px-6 py-6">
-              <RacheliOpps
-                opps={opps.filter((o) => o.BDR_Name === 'Rachel')}
-                onUpdate={updateOpp}
-                onDelete={deleteOpp}
-                onOpenEdit={handleOpenEdit}
-                onOpenAdd={(stage) => setOppModal({ mode: 'add', opp: { BDR_Name: 'Rachel', ...(stage ? { Stage: stage } : {}) } })}
-                onMoveStage={handleMoveStage}
-                bdrNames={BDR_NAMES}
-              />
+              <RacheliOpps />
             </div>
           )}
         </main>
