@@ -58,6 +58,19 @@ function getMeetingStatus(dateStr) {
   return null;
 }
 
+function getNextStepStatus(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr);
+  const diff = Math.round((d - today) / 86400000);
+  if (diff < 0)  return { label: 'Overdue', style: 'bg-red-50 text-red-600 border-red-200' };
+  if (diff === 0) return { label: 'Today!',  style: 'bg-violet-50 text-violet-700 border-violet-200' };
+  if (diff === 1) return { label: 'Tomorrow', style: 'bg-violet-50 text-violet-600 border-violet-200' };
+  if (diff <= 7)  return { label: `In ${diff}d`, style: 'bg-violet-50 text-violet-500 border-violet-100' };
+  return { label: new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), style: 'bg-gray-50 text-gray-500 border-gray-200' };
+}
+
 export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, isGhost, bdrNames = [], onEdit, onMoveStage }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: opp.Id,
@@ -79,6 +92,7 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   const [localEmail,     setLocalEmail]     = useState(opp.Email || '');
   const [localNextStep,  setLocalNextStep]  = useState(opp.Next_Step || '');
   const [localRejection, setLocalRejection] = useState(opp.Rejection_Reason || '');
+  const nextStepStatus = getNextStepStatus(opp.Next_Step_Date);
   const langRef = useRef(null);
 
   const currentLangs  = opp.Languages ? opp.Languages.split(',').filter(Boolean) : [];
@@ -92,6 +106,8 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
   useEffect(() => { setLocalEmail(opp.Email || ''); },      [opp.Email]);
   useEffect(() => { setLocalNextStep(opp.Next_Step || ''); }, [opp.Next_Step]);
   useEffect(() => { setLocalRejection(opp.Rejection_Reason || ''); }, [opp.Rejection_Reason]);
+
+  const saveNextStepDate = (val) => onUpdate(opp.Id, { Next_Step_Date: val });
 
   useEffect(() => {
     if (!showLangs) return;
@@ -336,12 +352,21 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
         {!isOverlay && (
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="w-full flex items-center justify-center gap-1 py-1 text-xs text-gray-300 hover:text-gray-500 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 py-1 text-xs text-gray-300 hover:text-gray-500 transition-colors"
           >
             <svg className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
             {expanded ? 'Show less' : 'More details'}
+            {/* Next step date badge — shown collapsed so it's always visible */}
+            {!expanded && nextStepStatus && (
+              <span className={`ml-auto flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${nextStepStatus.style}`}>
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                NS: {nextStepStatus.label}
+              </span>
+            )}
           </button>
         )}
 
@@ -438,6 +463,36 @@ export default function OpportunityCard({ opp, onUpdate, onDelete, isOverlay, is
                 + Add next steps
               </button>
             )}
+
+            {/* Next Step Date */}
+            <div className="flex items-center gap-2">
+              <svg className="w-3 h-3 text-violet-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="text-[10px] font-medium text-violet-400 uppercase tracking-wide flex-shrink-0">Next step date:</span>
+              <input
+                type="date"
+                value={opp.Next_Step_Date || ''}
+                onChange={(e) => saveNextStepDate(e.target.value)}
+                className="text-xs text-gray-500 bg-transparent border-0 p-0 focus:outline-none cursor-pointer hover:text-gray-700 flex-1"
+              />
+              {opp.Next_Step_Date && (
+                <button
+                  onClick={() => saveNextStepDate('')}
+                  title="Clear date"
+                  className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+              {nextStepStatus && (
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border flex-shrink-0 ${nextStepStatus.style}`}>
+                  {nextStepStatus.label}
+                </span>
+              )}
+            </div>
 
             {/* AE + BDR dropdowns */}
             <div className="grid grid-cols-2 gap-1.5">

@@ -10,16 +10,42 @@ const STAGE_THEME = {
   'Rejected':             { hex: '#dc2626', light: '#fef2f2', border: '#fecaca', text: '#991b1b', ring: 'ring-[#dc2626]/30' },
 };
 
+function getMonthKey(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function groupByMonth(opps) {
+  // Sort: dated opps ascending by date, undated at bottom
+  const dated   = [...opps].filter((o) => o.Meeting_Date).sort((a, b) => new Date(a.Meeting_Date) - new Date(b.Meeting_Date));
+  const undated = opps.filter((o) => !o.Meeting_Date);
+
+  const groups = [];
+  let lastKey = null;
+
+  for (const opp of dated) {
+    const key = getMonthKey(opp.Meeting_Date);
+    if (key !== lastKey) {
+      groups.push({ label: key, opps: [] });
+      lastKey = key;
+    }
+    groups[groups.length - 1].opps.push(opp);
+  }
+
+  if (undated.length > 0) {
+    groups.push({ label: null, opps: undated }); // no-date group
+  }
+
+  return groups;
+}
+
 export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDraggingId, bdrNames = [], onEdit, onMoveStage }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const t = STAGE_THEME[stage.id];
 
-  // Sort opportunities by Meeting_Date (ascending, nulls at bottom)
-  const sortedOpps = [...opps].sort((a, b) => {
-    const dateA = a.Meeting_Date ? new Date(a.Meeting_Date) : new Date('9999-12-31');
-    const dateB = b.Meeting_Date ? new Date(b.Meeting_Date) : new Date('9999-12-31');
-    return dateA - dateB;
-  });
+  const groups = groupByMonth(opps);
 
   return (
     <div className="flex flex-col w-72 flex-shrink-0">
@@ -51,18 +77,43 @@ export default function Column({ stage, opps, onAdd, onUpdate, onDelete, isDragg
         }`}
         style={{ borderColor: isOver ? t.hex : undefined }}
       >
-        <div className="flex flex-col gap-2">
-          {sortedOpps.map((opp) => (
-            <OpportunityCard
-              key={opp.Id}
-              opp={opp}
-              onUpdate={onUpdate}
-              onDelete={onDelete}
-              isGhost={opp.Id === isDraggingId}
-              bdrNames={bdrNames}
-              onEdit={onEdit}
-              onMoveStage={onMoveStage}
-            />
+        <div className="flex flex-col gap-0">
+          {groups.map((group, gi) => (
+            <div key={group.label ?? '__nodate__'}>
+              {/* Month separator */}
+              {group.label && (
+                <div className={`flex items-center gap-2 ${gi === 0 ? 'mb-1.5' : 'mt-3 mb-1.5'}`}>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    {group.label}
+                  </span>
+                  <span className="flex-1 h-px bg-gray-200" />
+                  <span className="text-[10px] text-gray-300 font-medium">{group.opps.length}</span>
+                </div>
+              )}
+              {!group.label && groups.length > 1 && (
+                <div className="flex items-center gap-2 mt-3 mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">No date</span>
+                  <span className="flex-1 h-px bg-gray-100" />
+                  <span className="text-[10px] text-gray-300 font-medium">{group.opps.length}</span>
+                </div>
+              )}
+
+              {/* Cards in this group */}
+              <div className="flex flex-col gap-2">
+                {group.opps.map((opp) => (
+                  <OpportunityCard
+                    key={opp.Id}
+                    opp={opp}
+                    onUpdate={onUpdate}
+                    onDelete={onDelete}
+                    isGhost={opp.Id === isDraggingId}
+                    bdrNames={bdrNames}
+                    onEdit={onEdit}
+                    onMoveStage={onMoveStage}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
 
           {opps.length === 0 && !isOver && (

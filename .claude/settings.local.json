@@ -41,7 +41,12 @@
       "Bash(tar -xf design_extracted.tar)",
       "Bash(/Users/eyalyadin/.bun/bin/bun run *)",
       "Bash(python3)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(node_modules/.bin/vite build *)",
+      "Bash(bun run *)",
+      "Bash(bun -e ' *)"
     ]
   }
 }

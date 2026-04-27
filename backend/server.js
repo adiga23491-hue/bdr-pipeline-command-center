@@ -14,15 +14,15 @@ const CSV_PATH        = process.env.CSV_PATH        || path.join(__dirname, 'pip
 const RACHELI_CSV_PATH = process.env.RACHELI_CSV_PATH || path.join(__dirname, 'racheli_opps.csv');
 const ACTIVITY_PATH   = process.env.ACTIVITY_PATH   || path.join(__dirname, 'activity_log.json');
 
-const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Meeting_Rejected','Rejection_Reason','Last_Updated'];
+const HEADERS = ['Id','Opp_Name','Stage','Meeting_Date','Languages','Pain_Validated','Source','Link','BDR_Name','AE_Name','Notes','Email','Next_Step','Next_Step_Date','Meeting_Rejected','Rejection_Reason','Last_Updated'];
 
 // Human-readable labels for field names
 const FIELD_LABELS = {
   Opp_Name: 'Name', Stage: 'Stage', Meeting_Date: 'Meeting Date',
   Languages: 'Languages', Pain_Validated: 'Pain Validated', Source: 'Source',
   Link: 'Link', BDR_Name: 'BDR', AE_Name: 'AE', Notes: 'Notes',
-  Email: 'Email', Next_Step: 'Next Step', Meeting_Rejected: 'Rejected',
-  Rejection_Reason: 'Rejection Reason',
+  Email: 'Email', Next_Step: 'Next Step', Next_Step_Date: 'Next Step Date',
+  Meeting_Rejected: 'Rejected', Rejection_Reason: 'Rejection Reason',
 };
 
 app.set('trust proxy', 1);
@@ -48,6 +48,7 @@ function readCSV() {
           else if (header === 'Rejection_Reason') migrated[header] = '';
           else if (header === 'Email') migrated[header] = '';
           else if (header === 'Next_Step') migrated[header] = '';
+          else if (header === 'Next_Step_Date') migrated[header] = '';
           else migrated[header] = '';
         }
       });
@@ -152,6 +153,7 @@ app.post('/api/opportunities', (req, res) => {
     Notes:            req.body.Notes            || '',
     Email:            req.body.Email.trim(),
     Next_Step:        req.body.Next_Step        || '',
+    Next_Step_Date:   req.body.Next_Step_Date   || '',
     Meeting_Rejected: String(req.body.Meeting_Rejected ?? 'false'),
     Rejection_Reason: req.body.Rejection_Reason || '',
     Last_Updated:     new Date().toISOString(),
@@ -213,6 +215,7 @@ app.post('/api/racheli', (req, res) => {
     Notes:            req.body.Notes            || '',
     Email:            req.body.Email            || '',
     Next_Step:        req.body.Next_Step        || '',
+    Next_Step_Date:   req.body.Next_Step_Date   || '',
     Meeting_Rejected: String(req.body.Meeting_Rejected ?? 'false'),
     Rejection_Reason: req.body.Rejection_Reason || '',
     Last_Updated:     new Date().toISOString(),
