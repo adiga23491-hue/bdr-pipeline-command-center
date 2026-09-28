@@ -592,6 +592,69 @@ tr:hover td { background: var(--surface3) !important; }
   background: var(--surface2);
 }
 
+
+/* ─── PIPELINE KANBAN (DEMO) ─── */
+.content.wide { max-width: none; }
+.demo-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--gold); background:var(--gold-dim); border:1px solid rgba(255,170,0,.35);
+  padding:3px 9px; border-radius:20px; vertical-align:middle; margin-left:10px;
+}
+.kb-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+.kb-toolbar input, .kb-toolbar select {
+  background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:8px; padding:8px 12px; font-family:var(--font); font-size:13px; outline:none;
+}
+.kb-toolbar input { flex:1; min-width:180px; }
+.kb-toolbar input:focus, .kb-toolbar select:focus { border-color:var(--accent-bright); }
+.kb-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+.kb-stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+.kb-stat b { display:block; font-size:22px; font-family:var(--mono); color:var(--cyan); line-height:1.2; }
+.kb-stat span { font-size:11.5px; color:var(--text-dim); }
+.kb-board { display:flex; gap:12px; overflow-x:auto; padding-bottom:14px; align-items:flex-start; }
+.kb-col { width:258px; flex-shrink:0; display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+.kb-col-hd { display:flex; align-items:center; gap:8px; padding:11px 12px;
+  border-bottom:1px solid var(--border); border-top:3px solid var(--c); border-radius:12px 12px 0 0; }
+.kb-dot { width:9px; height:9px; border-radius:50%; background:var(--c); box-shadow:0 0 8px var(--c); flex-shrink:0; }
+.kb-col-title { font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.kb-count { margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--text-dim);
+  background:var(--surface3); border:1px solid var(--border); border-radius:20px; padding:1px 8px; }
+.kb-drop { padding:8px; min-height:140px; display:flex; flex-direction:column; gap:8px;
+  transition:background .15s, box-shadow .15s; border-radius:0 0 12px 12px; }
+.kb-drop.over { background:var(--accent-dim); box-shadow:inset 0 0 0 2px var(--accent-bright); }
+.kb-month { display:flex; align-items:center; gap:8px; font-size:9.5px; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); margin:4px 2px 0; }
+.kb-month::after { content:''; flex:1; height:1px; background:var(--border); }
+.kb-empty { text-align:center; color:var(--text-muted); font-size:12px; padding:28px 0; }
+.kb-card { background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--c);
+  border-radius:9px; padding:10px 11px; cursor:grab; transition:transform .12s, border-color .12s, box-shadow .12s; }
+.kb-card:hover { border-color:var(--accent-bright); border-left-color:var(--c); transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(0,0,0,.35); }
+.kb-card.dragging { opacity:.4; }
+.kb-card-name { font-weight:600; font-size:13px; line-height:1.35; margin-bottom:6px; }
+.kb-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:7px; }
+.kb-tag { font-size:10px; font-weight:600; padding:1px 7px; border-radius:20px;
+  background:var(--surface3); border:1px solid var(--border); color:var(--text-dim); }
+.kb-tag.pain { color:var(--green); background:var(--green-dim); border-color:rgba(0,214,143,.3); }
+.kb-tag.src { color:var(--cyan); background:var(--cyan-dim); border-color:rgba(0,194,255,.3); }
+.kb-tag.warn { color:var(--gold); background:var(--gold-dim); border-color:rgba(255,170,0,.3); }
+.kb-tag.late { color:var(--red); background:var(--red-dim); border-color:rgba(255,77,106,.3); }
+.kb-meta { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-dim); }
+.kb-avatar { width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  font-size:9.5px; font-weight:700; color:#fff; flex-shrink:0; }
+.kb-meta .kb-date { margin-left:auto; font-family:var(--mono); font-size:10.5px; }
+.kb-next { margin-top:7px; padding-top:7px; border-top:1px dashed var(--border);
+  font-size:11px; color:var(--text-dim); line-height:1.45; }
+.kb-next b { color:var(--text); font-weight:600; }
+.kb-move { display:none; margin-top:8px; width:100%; }
+.kb-detail-row { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.kb-detail-row:last-child { border-bottom:none; }
+.kb-detail-row span:first-child { width:110px; flex-shrink:0; color:var(--text-dim); }
+@media (max-width: 900px) { .kb-stats { grid-template-columns:1fr 1fr; } }
+@media (hover: none) { .kb-move { display:block; } .kb-card { cursor:default; } }
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 640px) {
   .sidebar { width: 52px; }
@@ -651,6 +714,7 @@ tr:hover td { background: var(--surface3) !important; }
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="nav-item active" onclick="nav(this,'dashboard')"><span class="nav-icon">🏠</span><span>Dashboard</span></div>
+    <div class="nav-item" onclick="nav(this,'pipeline')"><span class="nav-icon">🧭</span><span>Pipeline Kanban</span></div>
     <div class="nav-item" onclick="nav(this,'scripts')"><span class="nav-icon">📞</span><span>Call Scripts</span></div>
     <div class="nav-item" onclick="nav(this,'objections')"><span class="nav-icon">🛡️</span><span>Objections</span></div>
     <div class="nav-item" onclick="nav(this,'email')"><span class="nav-icon">✉️</span><span>Email Drafter</span></div>
@@ -942,6 +1006,25 @@ tr:hover td { background: var(--surface3) !important; }
       </div>
     </div>
 
+    <!-- ══════════ PIPELINE KANBAN (DEMO DATA) ══════════ -->
+    <div id="tab-pipeline" class="tab-panel">
+      <div class="page-hd">
+        <h1>Pipeline Kanban <span class="demo-badge">● Demo data</span></h1>
+        <p>Drag opportunities between stages. All companies and contacts here are fictional — for demonstration only.</p>
+      </div>
+
+      <div class="kb-stats" id="kbStats"></div>
+
+      <div class="kb-toolbar">
+        <input id="kbSearch" type="text" placeholder="Search opportunity, AE, language…" oninput="renderKanban()">
+        <select id="kbBdr" onchange="renderKanban()"><option value="">All BDRs</option></select>
+        <select id="kbSource" onchange="renderKanban()"><option value="">All sources</option></select>
+        <button class="btn btn-ghost" onclick="resetKanban()">↺ Reset demo</button>
+      </div>
+
+      <div class="kb-board" id="kbBoard"></div>
+    </div>
+
     <!-- ══════════ DISPOS ══════════ -->
     <div id="tab-dispos" class="tab-panel">
       <div class="page-hd">
@@ -983,6 +1066,17 @@ tr:hover td { background: var(--surface3) !important; }
   </main>
 </div>
 
+<!-- ══════════ KANBAN OPP DETAIL MODAL ══════════ -->
+<div class="modal-bg" id="kbModal" onclick="if(event.target===this)closeKbModal()">
+  <div class="modal">
+    <h2 id="kbModalTitle"></h2>
+    <div id="kbModalBody" style="margin-top:12px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeKbModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ SETTINGS MODAL ══════════ -->
 <div class="modal-bg" id="settingsModal">
   <div class="modal">
@@ -1018,7 +1112,156 @@ function nav(el, tabId) {
   document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
   document.getElementById('tab-' + tabId).classList.add('active');
+  document.querySelector('.content').classList.toggle('wide', tabId === 'pipeline');
+  if (tabId === 'pipeline') renderKanban();
 }
+
+// ─────────────────────────────────────────────
+// PIPELINE KANBAN — DEMO DATA ONLY (fictional companies)
+// ─────────────────────────────────────────────
+const KB_STAGES = [
+  { id:'Meeting Not Accepted', label:'Not Accepted', c:'#FF4D6A' },
+  { id:'S0',          label:'S0 — Scheduled', c:'#FFAA00' },
+  { id:'S0 Occurred', label:'S0 Occurred',    c:'#A25DDC' },
+  { id:'S1',          label:'S1 — Accepted',  c:'#00D68F' },
+  { id:'S2',          label:'S2 — Advanced',  c:'#00C2FF' },
+  { id:'Rejected',    label:'Rejected',       c:'#8FA8C8' },
+];
+const KB_BDR_COLORS = { Simon:'#005CE6', Steven:'#A25DDC', Eyal:'#00A374', Rachel:'#D97706' };
+
+function kbDate(offsetDays) {
+  const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + offsetDays);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function kbSeed() {
+  // Dates are relative to today so the demo always looks current.
+  return [
+    { id:1,  name:'Northwind Logistics — Test Impact',   stage:'S0',          date:kbDate(1),   lang:['Java'],            pain:true,  source:'Outbound',       bdr:'Simon',  ae:'Daniel', contact:'VP Engineering',        next:'Confirm attendees & send agenda', nextDate:kbDate(0) },
+    { id:2,  name:'Bluepeak Insurance — QA Modernization', stage:'S0',        date:kbDate(3),   lang:['C#','.NET'],       pain:false, source:'LinkedIn',       bdr:'Steven', ae:'Bruce',  contact:'Director of QA',        next:'Share SeaLights one-pager',       nextDate:kbDate(2) },
+    { id:3,  name:'Orbitra Payments',                     stage:'S0',          date:kbDate(9),   lang:['Java','Kotlin'],   pain:true,  source:'Email Campaign', bdr:'Eyal',   ae:'Jake',   contact:'Head of Platform',      next:'Research tech stack before call', nextDate:kbDate(6) },
+    { id:4,  name:'Helix Health Systems',                 stage:'S0 Occurred', date:kbDate(-2),  lang:['Python'],          pain:true,  source:'Inbound',        bdr:'Rachel', ae:'Arik',   contact:'QE Manager',            next:'Schedule tech demo with AE',      nextDate:kbDate(1) },
+    { id:5,  name:'Crestline Retail Group',               stage:'S0 Occurred', date:kbDate(-5),  lang:['JavaScript','React'], pain:false, source:'Cold Call',   bdr:'Simon',  ae:'JVL',    contact:'Engineering Manager',   next:'Follow up on budget timing',      nextDate:kbDate(-1) },
+    { id:6,  name:'Vantage Telecom — CI Quality Gates',   stage:'S1',          date:kbDate(-9),  lang:['Java','Go'],       pain:true,  source:'Referral',       bdr:'Steven', ae:'Daniel', contact:'Sr. Director DevOps',   next:'POC scoping call',                nextDate:kbDate(4) },
+    { id:7,  name:'Aurora Bank',                          stage:'S1',          date:kbDate(-14), lang:['C#','.NET','TypeScript'], pain:true, source:'Event',     bdr:'Eyal',   ae:'Bruce',  contact:'CTO Office',            next:'Security questionnaire',          nextDate:kbDate(7) },
+    { id:8,  name:'Kestrel Automotive Software',          stage:'S1',          date:kbDate(-20), lang:['C++ (GCC)'],       pain:true,  source:'Partner',        bdr:'Rachel', ae:'Jake',   contact:'Head of Test Automation', next:'Intro to AE champion',          nextDate:kbDate(10) },
+    { id:9,  name:'Summit Cloud Services',                stage:'S2',          date:kbDate(-30), lang:['Java','Node.js'],  pain:true,  source:'Outbound',       bdr:'Simon',  ae:'Arik',   contact:'VP R&D',                next:'POC kickoff',                     nextDate:kbDate(5) },
+    { id:10, name:'Meridian Energy Analytics',            stage:'S2',          date:kbDate(-38), lang:['Python','Java'],   pain:true,  source:'LinkedIn',       bdr:'Steven', ae:'JVL',    contact:'Director of Engineering', next:'Pricing review with procurement', nextDate:kbDate(12) },
+    { id:11, name:'Pinecrest Media',                      stage:'Meeting Not Accepted', date:kbDate(2), lang:['Angular'], pain:false, source:'Email Campaign', bdr:'Eyal',   ae:'',       contact:'QA Lead',               next:'Propose a new time',              nextDate:kbDate(1) },
+    { id:12, name:'Solstice Travel Tech',                 stage:'Meeting Not Accepted', date:kbDate(6), lang:['Java'],    pain:false, source:'Outbound',       bdr:'Rachel', ae:'',       contact:'Engineering Manager',   next:'Re-engage via LinkedIn',          nextDate:kbDate(3) },
+    { id:13, name:'Granite Manufacturing IT',             stage:'Rejected',    date:kbDate(-12), lang:['C (GCC)'],         pain:false, source:'Cold Call',      bdr:'Simon',  ae:'',       contact:'IT Manager',            next:'Rejected — Tech stack not supported', nextDate:'' },
+    { id:14, name:'Lumen EdTech',                         stage:'Rejected',    date:kbDate(-18), lang:['Python'],          pain:false, source:'Inbound',        bdr:'Steven', ae:'',       contact:'Founder',               next:'Rejected — Company too small',    nextDate:'' },
+  ];
+}
+let kbOpps = kbSeed();
+let kbDragId = null;
+
+function kbEsc(t){ return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function kbFmt(d){ if(!d) return ''; return new Date(d + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function kbDiff(d){ if(!d) return null; const t=new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d+'T00:00:00')-t)/86400000); }
+
+function kbInitFilters() {
+  const bdrSel = document.getElementById('kbBdr'), srcSel = document.getElementById('kbSource');
+  if (bdrSel.options.length > 1) return;
+  Object.keys(KB_BDR_COLORS).forEach(b => bdrSel.add(new Option(b, b)));
+  [...new Set(kbOpps.map(o => o.source))].sort().forEach(s => srcSel.add(new Option(s, s)));
+}
+
+function kbFiltered() {
+  const q = document.getElementById('kbSearch').value.trim().toLowerCase();
+  const bdr = document.getElementById('kbBdr').value;
+  const src = document.getElementById('kbSource').value;
+  return kbOpps.filter(o =>
+    (!bdr || o.bdr === bdr) && (!src || o.source === src) &&
+    (!q || [o.name, o.ae, o.contact, o.bdr, o.lang.join(' ')].join(' ').toLowerCase().includes(q)));
+}
+
+function kbCard(o, stage) {
+  const d = kbDiff(o.date);
+  let dateTag = '';
+  if (o.stage === 'S0' || o.stage === 'Meeting Not Accepted') {
+    if (d === 0) dateTag = '<span class="kb-tag warn">Today!</span>';
+    else if (d === 1) dateTag = '<span class="kb-tag warn">Tomorrow</span>';
+    else if (d > 1 && d <= 3) dateTag = `<span class="kb-tag warn">In ${d}d</span>`;
+  }
+  const nd = kbDiff(o.nextDate);
+  const nextLate = o.nextDate && nd < 0 ? ' <span class="kb-tag late">Overdue</span>' : '';
+  const initials = o.bdr.slice(0,2).toUpperCase();
+  const opts = KB_STAGES.map(s => `<option value="${s.id}"${s.id===o.stage?' selected':''}>${s.label}</option>`).join('');
+  return `<div class="kb-card" style="--c:${stage.c}" draggable="true" data-id="${o.id}"
+      ondragstart="kbDragStart(event,${o.id})" ondragend="kbDragEnd(event)" onclick="kbOpen(${o.id})">
+    <div class="kb-card-name">${kbEsc(o.name)}</div>
+    <div class="kb-tags">
+      ${o.lang.map(l => `<span class="kb-tag">${kbEsc(l)}</span>`).join('')}
+      <span class="kb-tag src">${kbEsc(o.source)}</span>
+      ${o.pain ? '<span class="kb-tag pain">✓ Pain</span>' : ''}
+      ${dateTag}
+    </div>
+    <div class="kb-meta">
+      <span class="kb-avatar" style="background:${KB_BDR_COLORS[o.bdr]||'#3D5A80'}">${initials}</span>
+      <span>${kbEsc(o.bdr)}${o.ae ? ' → ' + kbEsc(o.ae) : ''}</span>
+      <span class="kb-date">${kbFmt(o.date)}</span>
+    </div>
+    ${o.next ? `<div class="kb-next"><b>Next:</b> ${kbEsc(o.next)}${o.nextDate ? ' · ' + kbFmt(o.nextDate) : ''}${nextLate}</div>` : ''}
+    <select class="kb-move" onclick="event.stopPropagation()" onchange="kbMove(${o.id}, this.value)">${opts}</select>
+  </div>`;
+}
+
+function renderKanban() {
+  kbInitFilters();
+  const list = kbFiltered();
+  const active = list.filter(o => o.stage !== 'Rejected');
+  const s1s2 = list.filter(o => o.stage === 'S1' || o.stage === 'S2').length;
+  const upcoming = list.filter(o => o.stage === 'S0' && kbDiff(o.date) >= 0 && kbDiff(o.date) <= 7).length;
+  const pain = active.length ? Math.round(active.filter(o => o.pain).length / active.length * 100) : 0;
+  document.getElementById('kbStats').innerHTML = `
+    <div class="kb-stat"><b>${active.length}</b><span>Active opportunities</span></div>
+    <div class="kb-stat"><b>${upcoming}</b><span>S0 meetings next 7 days</span></div>
+    <div class="kb-stat"><b>${s1s2}</b><span>Accepted (S1 + S2)</span></div>
+    <div class="kb-stat"><b>${pain}%</b><span>Pain validated</span></div>`;
+
+  document.getElementById('kbBoard').innerHTML = KB_STAGES.map(stage => {
+    const items = list.filter(o => o.stage === stage.id).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    let body = '', lastMonth = null;
+    items.forEach(o => {
+      const m = o.date ? new Date(o.date+'T00:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'}) : 'No date';
+      if (m !== lastMonth) { body += `<div class="kb-month">${m}</div>`; lastMonth = m; }
+      body += kbCard(o, stage);
+    });
+    if (!items.length) body = '<div class="kb-empty">Drop cards here</div>';
+    return `<div class="kb-col" style="--c:${stage.c}">
+      <div class="kb-col-hd"><span class="kb-dot"></span><span class="kb-col-title" style="color:${stage.c}">${stage.label}</span><span class="kb-count">${items.length}</span></div>
+      <div class="kb-drop" data-stage="${stage.id}"
+        ondragover="kbOver(event)" ondragleave="kbLeave(event)" ondrop="kbDrop(event,'${stage.id}')">${body}</div>
+    </div>`;
+  }).join('');
+}
+
+function kbDragStart(e, id) { kbDragId = id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); e.currentTarget.classList.add('dragging'); }
+function kbDragEnd(e) { e.currentTarget.classList.remove('dragging'); document.querySelectorAll('.kb-drop.over').forEach(z => z.classList.remove('over')); }
+function kbOver(e) { e.preventDefault(); e.currentTarget.classList.add('over'); }
+function kbLeave(e) { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('over'); }
+function kbDrop(e, stageId) { e.preventDefault(); e.currentTarget.classList.remove('over'); if (kbDragId != null) kbMove(kbDragId, stageId); kbDragId = null; }
+function kbMove(id, stageId) { const o = kbOpps.find(x => x.id === id); if (o && o.stage !== stageId) { o.stage = stageId; renderKanban(); } }
+function resetKanban() { kbOpps = kbSeed(); renderKanban(); }
+
+function kbOpen(id) {
+  const o = kbOpps.find(x => x.id === id); if (!o) return;
+  const st = KB_STAGES.find(s => s.id === o.stage);
+  document.getElementById('kbModalTitle').innerHTML = kbEsc(o.name) + ' <span class="demo-badge">Demo</span>';
+  const row = (k, v) => `<div class="kb-detail-row"><span>${k}</span><span>${v}</span></div>`;
+  document.getElementById('kbModalBody').innerHTML =
+    row('Stage', `<span style="color:${st.c};font-weight:600">${st.label}</span>`) +
+    row('Meeting date', kbFmt(o.date) || '—') +
+    row('Contact', kbEsc(o.contact)) +
+    row('BDR', kbEsc(o.bdr)) +
+    row('AE', kbEsc(o.ae) || '—') +
+    row('Languages', kbEsc(o.lang.join(', '))) +
+    row('Source', kbEsc(o.source)) +
+    row('Pain validated', o.pain ? '✅ Yes' : '— Not yet') +
+    row('Next step', kbEsc(o.next) + (o.nextDate ? ' · ' + kbFmt(o.nextDate) : ''));
+  document.getElementById('kbModal').classList.add('open');
+}
+function closeKbModal() { document.getElementById('kbModal').classList.remove('open'); }
 
 // ─────────────────────────────────────────────
 // UI HELPERS  (no loading spinner needed — all instant)
